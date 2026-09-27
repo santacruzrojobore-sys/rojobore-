@@ -211,9 +211,7 @@
     restaurante: '#A855F7'
   };
 
-  // Mapeo de nombre → archivo de imagen
   const mapaImagenes = {
-    // Atractivos
     'Balneario Municipal El Chorro': 'lugarturistico/balneariomunicipal.jpeg',
     'Las Pampas': 'lugarturistico/laspampas.jpg',
     'Las Pozas': 'lugarturistico/laspozas.jpeg',
@@ -225,7 +223,6 @@
     'Cascada Velo de Novia': 'lugarturistico/cascadavelodenovia.jpeg',
     'Cascada de Yororoba': 'lugarturistico/cascadadeyororoba.jpeg',
     'Centro Turístico Los Hervores': 'lugarturistico/loshervores.jpg',
-    // Hoteles
     'Hotel Las Lajas': 'https://www.boliviaentusmanos.com/amarillas1/businesscard/imagenes/hlajas1.jpg',
     'Hotel Descanso Chiquitano': 'hoteles/hoteldescansochiquitano.jpg',
     'Hotel Mami Vilma': 'https://cf.bstatic.com/xdata/images/hotel/max1024x768/350290194.jpg',
@@ -239,7 +236,6 @@
     'Chochís Cabañas': 'hoteles/caba%C3%B1aschochis.jpeg',
     'Hotel Peregrino': 'hoteles/hotelperegrino.jpg',
     'Hotel Pacheco': 'hoteles/hotelpacheco.jpg',
-    // Restaurantes
     'Restaurant El Molino': 'restaurantes/restaurantemolino.jpg',
     'Café París': 'restaurantes/cafeparis.png',
     'Deleite Café Roboré': 'restaurantes/deleitecafe.png',
@@ -296,7 +292,6 @@
       console.warn('No se pudo cargar Bing Aerial.', e);
     }
 
-    // Función auxiliar para añadir puntos al mapa
     function agregarPunto(lugar, color, prefijo) {
       const imagenUrl = obtenerImagenLugar(lugar.nombre);
       viewer.entities.add({
@@ -333,12 +328,10 @@
       });
     }
 
-    // Añadir las 3 categorías
     atractivos.forEach(l => agregarPunto(l, colores[l.tipo] || colores.turismo, '📍 '));
     hoteles.forEach(l => agregarPunto(l, colores.hotel, '🏨 '));
     restaurantes.forEach(l => agregarPunto(l, colores.restaurante, '🍽️ '));
 
-    // Detectar clic
     viewer.screenSpaceEventHandler.setInputAction(function (movement) {
       const picked = viewer.scene.pick(movement.position);
       if (Cesium.defined(picked) && picked.id && picked.id.name) {
@@ -393,16 +386,16 @@
     document.getElementById('detallePanel').style.display = 'none';
   }
 
+  // ⚡ CORRECCIÓN: setView para ir directo a Roboré (sin vuelo animado)
   window.volverARobore = function () {
     if (!viewer) return;
-    viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(ROBORE.lon, ROBORE.lat, 8000),
+    viewer.camera.setView({
+      destination: Cesium.Cartesian3.fromDegrees(ROBORE.lon, ROBORE.lat, 12000),
       orientation: {
         heading: Cesium.Math.toRadians(0),
-        pitch: Cesium.Math.toRadians(-45),
+        pitch: Cesium.Math.toRadians(-50),
         roll: 0
-      },
-      duration: 2
+      }
     });
   };
 </script>
