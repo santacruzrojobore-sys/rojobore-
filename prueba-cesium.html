@@ -30,7 +30,7 @@
     #tokenPanel small { color: rgba(255,255,255,0.5); display: block; margin-top: 6px; }
 
     #infoPanel {
-      position: absolute; top: 20px; left: 20px;
+      position: absolute; top: 20px; right: 20px;
       background: rgba(13, 17, 23, 0.95);
       border: 1px solid rgba(57, 255, 20, 0.3);
       border-radius: 12px; padding: 1rem;
@@ -102,7 +102,7 @@
   async function iniciarVisor() {
     const token = document.getElementById('tokenInput').value.trim();
     if (!token) {
-      alert('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IkdmLVpsc0R2THpwX1ZOaXciLCJqdGkiOiI5MDgzMDc2Ni04MDVjLTQ1ZDQtYTI0NC1iMDliZWU4ZTFlZGEiLCJpZCI6NTA5NzQ0LCJzdWIiOiJjcmhpcyIsImlzcyI6Imh0dHBzOi8vYXBpLmNlc2l1bS5jb20iLCJhdWQiOiJjcmhpc19kZWZhdWx0IiwiaWF0IjoxNzkwNTMwOTA3fQ.o9kuxu96WvbdJqs4bpWUy0NpCMedKOS70Obxqo0fK58');
+      alert('alert('Por favor pega tu token de Cesium ion primero.');');
       return;
     }
 
