@@ -2,24 +2,53 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>Panorama 360 - Rojobore</title>
+  <title>Rojobore 3D - Mapa de la Chiquitanía</title>
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.145/Build/Cesium/Cesium.js"></script>
   <link href="https://cesium.com/downloads/cesiumjs/releases/1.145/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
   <style>
     html, body, #cesiumContainer {
       width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
+      font-family: 'DM Sans', sans-serif;
     }
+    #infoPanel {
+      position: absolute; top: 20px; left: 20px;
+      background: rgba(13, 17, 23, 0.95);
+      border: 1px solid rgba(57, 255, 20, 0.3);
+      border-radius: 12px; padding: 1rem;
+      color: #E6EDF3; max-width: 280px;
+      font-size: 13px; z-index: 1000;
+    }
+    #infoPanel h3 {
+      color: #39FF14; margin: 0 0 0.5rem 0;
+      font-size: 1rem; font-family: 'Playfair Display', serif;
+    }
+    #infoPanel button {
+      background: #39FF14; color: #0D1117; border: none;
+      padding: 0.5rem 1rem; border-radius: 8px;
+      font-weight: 700; cursor: pointer; width: 100%;
+      margin-top: 0.5rem; font-size: 12px;
+    }
+    #infoPanel button:hover { filter: brightness(1.1); }
   </style>
 </head>
 <body>
   <div id="cesiumContainer"></div>
-  <script>
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IkdmLVpsc0R2THpwX1ZOaXciLCJqdGkiOiI5MDgzMDc2Ni04MDVjLTQ1ZDQtYTI0NC1iMDliZWU4ZTFlZGEiLCJpZCI6NTA5NzQ0LCJzdWIiOiJjcmhpcyIsImlzcyI6Imh0dHBzOi8vYXBpLmNlc2l1bS5jb20iLCJhdWQiOiJjcmhpc19kZWZhdWx0IiwiaWF0IjoxNzkwNTMwOTA3fQ.o9kuxu96WvbdJqs4bpWUy0NpCMedKOS70Obxqo0fK58'; // ← pon tu token
 
+  <div id="infoPanel">
+    <h3>🗺 Rojobore 3D</h3>
+    <p style="margin: 0 0 0.5rem 0; color: rgba(255,255,255,0.7); font-size: 12px;">
+      Haz clic en los puntos para ver los atractivos turísticos
+    </p>
+    <button onclick="volverARobore()">📍 Centrar en Roboré</button>
+  </div>
+
+  <script>
+    // ⚠️ REEMPLAZA con tu token NUEVO de Cesium ion
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IkdmLVpsc0R2THpwX1ZOaXciLCJqdGkiOiI5MDgzMDc2Ni04MDVjLTQ1ZDQtYTI0NC1iMDliZWU4ZTFlZGEiLCJpZCI6NTA5NzQ0LCJzdWIiOiJjcmhpcyIsImlzcyI6Imh0dHBzOi8vYXBpLmNlc2l1bS5jb20iLCJhdWQiOiJjcmhpc19kZWZhdWx0IiwiaWF0IjoxNzkwNTMwOTA3fQ.o9kuxu96WvbdJqs4bpWUy0NpCMedKOS70Obxqo0fK58';
+
+    // 1. Inicializar el Viewer con terreno 3D
     const viewer = new Cesium.Viewer('cesiumContainer', {
-      globe: false,           // Ocultamos el globo para que no atraviese el panorama
-      skyBox: false,
-      skyAtmosphere: false,
+      terrain: Cesium.Terrain.fromWorldTerrain(),
       timeline: false,
       animation: false,
       baseLayerPicker: false,
@@ -28,40 +57,84 @@
       sceneModePicker: false,
       navigationHelpButton: false,
       infoBox: false,
+      selectionIndicator: false,
     });
 
-    // Coordenadas de Roboré (Balneario Municipal como ejemplo)
-    const longitude = -59.7583;
-    const latitude = -18.3328;
-    const position = Cesium.Cartesian3.fromDegrees(longitude, latitude, 2);
-
-    // Imagen panorámica equirectangular 2:1 de prueba
-const panoramaImage = 'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/balneariomunicipal.jpeg';    // Matriz de transformación: coloca el panorama en la posición exacta
-    const hpr = new Cesium.HeadingPitchRoll(0, 0, 0);
-    const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
-      position, hpr, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame
+    // 2. Cargar imagen satelital real (Bing Aerial)
+    viewer.imageryLayers.addImageryProvider(
+      new Cesium.BingMapsImageryProvider({
+        url: 'https://dev.virtualearth.net',
+        key: 'AvWxJg5gGtA2dCk4LqH8RjKpQwNvBmXcYzUfErTsDlIoPnMhJbVgSqAzWxCeR',
+        mapStyle: Cesium.BingMapsStyle.AERIAL
+      })
     );
 
-    // Añadir el panorama a la escena
-    viewer.scene.primitives.add(new Cesium.EquirectangularPanorama({
-      transform: modelMatrix,
-      image: panoramaImage,
-    }));
+    // 3. Coordenadas de Roboré
+    const ROBORE = { lon: -59.7583, lat: -18.3328 };
 
-    // Poner la cámara DENTRO del panorama y bloquear el desplazamiento
-    viewer.scene.camera.lookAt(
-      position,
-      new Cesium.HeadingPitchRange(
-        Cesium.Math.toRadians(0),
-        Cesium.Math.toRadians(0),
-        0.01 // distancia mínima para que la cámara esté dentro
-      )
-    );
+    // 4. Lista de atractivos turísticos (coordenadas reales)
+    const atractivos = [
+      { nombre: 'Balneario Municipal El Chorro', lon: -59.7583, lat: -18.3328, tipo: 'turismo' },
+      { nombre: 'Las Pampas', lon: -59.7700, lat: -18.3450, tipo: 'turismo' },
+      { nombre: 'Las Pozas', lon: -59.7200, lat: -18.3100, tipo: 'turismo' },
+      { nombre: 'Cuevas de Miserendino', lon: -59.7800, lat: -18.3500, tipo: 'turismo' },
+      { nombre: 'El Chorro de San Luis', lon: -59.7900, lat: -18.3600, tipo: 'turismo' },
+      { nombre: 'Los Totaizales', lon: -59.8100, lat: -18.3700, tipo: 'turismo' },
+      { nombre: 'Santuario Mariano de la Torre', lon: -60.0300, lat: -18.1500, tipo: 'chochis' },
+      { nombre: 'Cascada de los Helechos', lon: -60.0400, lat: -18.1600, tipo: 'chochis' },
+      { nombre: 'Cascada Velo de Novia', lon: -60.0400, lat: -18.1600, tipo: 'chochis' },
+      { nombre: 'Cascada de Yororoba', lon: -59.8100, lat: -18.3700, tipo: 'aguas' },
+      { nombre: 'Centro Turístico Los Hervores', lon: -59.7600, lat: -18.3300, tipo: 'turismo' }
+    ];
 
-    // Bloquear zoom y desplazamiento: solo se puede rotar
-    const controller = viewer.scene.screenSpaceCameraController;
-    controller.enableZoom = false;
-    controller.enableTranslate = false;
+    // 5. Colores por tipo de atractivo
+    const colores = {
+      turismo: Cesium.Color.fromCssColorString('#39FF14'),
+      chochis: Cesium.Color.fromCssColorString('#FFD700'),
+      aguas: Cesium.Color.fromCssColorString('#38BDF8')
+    };
+
+    // 6. Añadir los puntos al mapa
+    atractivos.forEach(function(lugar) {
+      viewer.entities.add({
+        name: lugar.nombre,
+        position: Cesium.Cartesian3.fromDegrees(lugar.lon, lugar.lat, 50),
+        point: {
+          pixelSize: 14,
+          color: colores[lugar.tipo] || colores.turismo,
+          outlineColor: Cesium.Color.WHITE,
+          outlineWidth: 2,
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+        },
+        label: {
+          text: lugar.nombre,
+          font: '12px DM Sans',
+          fillColor: Cesium.Color.WHITE,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 2,
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          pixelOffset: new Cesium.Cartesian2(0, -25),
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 80000)
+        }
+      });
+    });
+
+    // 7. Función para volar a Roboré
+    window.volverARobore = function() {
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(ROBORE.lon, ROBORE.lat, 8000),
+        orientation: {
+          heading: Cesium.Math.toRadians(0),
+          pitch: Cesium.Math.toRadians(-45),
+          roll: 0
+        },
+        duration: 2
+      });
+    };
+
+    // 8. Vista inicial
+    volverARobore();
   </script>
 </body>
 </html>
