@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Prueba Cesium - Rojobore</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.145/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.145/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    html, body, #cesiumContainer {
+      width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <script>
+    // ⚠️ REEMPLAZA ESTO con tu token nuevo
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IkdmLVpsc0R2THpwX1ZOaXciLCJqdGkiOiI5MDgzMDc2Ni04MDVjLTQ1ZDQtYTI0NC1iMDliZWU4ZTFlZGEiLCJpZCI6NTA5NzQ0LCJzdWIiOiJjcmhpcyIsImlzcyI6Imh0dHBzOi8vYXBpLmNlc2l1bS5jb20iLCJhdWQiOiJjcmhpc19kZWZhdWx0IiwiaWF0IjoxNzkwNTMwOTA3fQ.o9kuxu96WvbdJqs4bpWUy0NpCMedKOS70Obxqo0fK58';
+
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      terrain: Cesium.Terrain.fromWorldTerrain(),
+      timeline: false,
+      animation: false,
+      baseLayerPicker: false,
+      geocoder: false,
+      homeButton: false,
+      sceneModePicker: false,
+      navigationHelpButton: false,
+      infoBox: false,
+    });
+
+    // Volar hasta Roboré
+    viewer.camera.setView({
+  destination: Cesium.Cartesian3.fromDegrees(-59.7583, -18.3328, 1500000)
+});
+      orientation: {
+        heading: Cesium.Math.toRadians(0),
+        pitch: Cesium.Math.toRadians(-45),
+        roll: 0
+      }
+    });
+  </script>
+</body>
+</html>
