@@ -87,6 +87,50 @@
       text-align: center;
     }
     #detallePanel .btn-llegar:hover { background: #3367d6; }
+
+    /* ===== BOTONES DE ZOOM PERSONALIZADOS ===== */
+    #zoomControls {
+      position: absolute; bottom: 30px; right: 20px;
+      z-index: 1000; display: flex; flex-direction: column;
+      gap: 6px;
+    }
+    #zoomControls button {
+      background: rgba(13, 17, 23, 0.95);
+      color: #39FF14; border: 2px solid rgba(57, 255, 20, 0.4);
+      width: 46px; height: 46px; border-radius: 50%;
+      font-size: 22px; font-weight: 900;
+      cursor: pointer; margin: 0;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      transition: 0.15s; padding: 0;
+    }
+    #zoomControls button:hover {
+      background: rgba(57, 255, 20, 0.15);
+      transform: scale(1.08);
+    }
+    #zoomControls button:active { transform: scale(0.95); }
+
+    /* ===== BOTONES DE GIRO (opcional) ===== */
+    #rotateControls {
+      position: absolute; bottom: 30px; right: 80px;
+      z-index: 1000; display: flex; flex-direction: column;
+      gap: 6px;
+    }
+    #rotateControls button {
+      background: rgba(13, 17, 23, 0.95);
+      color: #39FF14; border: 2px solid rgba(57, 255, 20, 0.4);
+      width: 46px; height: 46px; border-radius: 50%;
+      font-size: 18px; font-weight: 900;
+      cursor: pointer; margin: 0;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      transition: 0.15s; padding: 0;
+    }
+    #rotateControls button:hover {
+      background: rgba(57, 255, 20, 0.15);
+      transform: scale(1.08);
+    }
+    #rotateControls button:active { transform: scale(0.95); }
   </style>
 </head>
 <body>
@@ -118,6 +162,19 @@
   <h3 id="detalleNombre"></h3>
   <p id="detalleDesc" style="color: rgba(255,255,255,0.85); margin: 0; font-size: 12px; white-space: pre-line;"></p>
   <a id="btnComoLlegar" class="btn-llegar" href="#" target="_blank">🧭 Cómo llegar con Google Maps</a>
+</div>
+
+<!-- ===== BOTONES DE ZOOM ===== -->
+<div id="zoomControls">
+  <button onclick="zoomIn()" title="Acercar">+</button>
+  <button onclick="zoomOut()" title="Alejar">−</button>
+</div>
+
+<!-- ===== BOTONES DE GIRO ===== -->
+<div id="rotateControls">
+  <button onclick="rotateLeft()" title="Girar a la izquierda">↺</button>
+  <button onclick="rotateRight()" title="Girar a la derecha">↻</button>
+  <button onclick="inclinar()" title="Inclinar vista">⬇</button>
 </div>
 
 <script>
@@ -312,13 +369,13 @@
 
     // ===== CONFIGURACIÓN DE CONTROLES DE CÁMARA =====
     const controller = viewer.scene.screenSpaceCameraController;
-    controller.enableRotate = true;      // Rotar con clic izquierdo
-    controller.enableTranslate = true;   // Desplazar con clic derecho
-    controller.enableZoom = true;        // Zoom con rueda
-    controller.enableTilt = true;        // Inclinar con Ctrl + clic
-    controller.enableLook = true;        // Mirar libremente
-    controller.minimumZoomDistance = 100;   // No acercarse más de 100m
-    controller.maximumZoomDistance = 50000; // No alejarse más de 50km
+    controller.enableRotate = true;
+    controller.enableTranslate = true;
+    controller.enableZoom = true;
+    controller.enableTilt = true;
+    controller.enableLook = true;
+    controller.minimumZoomDistance = 100;
+    controller.maximumZoomDistance = 50000;
 
     function agregarPunto(lugar, color, prefijo) {
       const imagenUrl = obtenerImagenLugar(lugar.nombre);
@@ -410,7 +467,6 @@
     
     document.getElementById('detalleDesc').textContent = descripcion;
     
-    // Configurar botón "Cómo llegar"
     const btnLlegar = document.getElementById('btnComoLlegar');
     btnLlegar.href = 'https://www.google.com/maps/dir/?api=1&destination=' + lugar.lat + ',' + lugar.lon;
     
@@ -420,6 +476,37 @@
   function cerrarDetalle() {
     document.getElementById('detallePanel').style.display = 'none';
   }
+
+  // ==================== FUNCIONES DE LOS BOTONES DE ZOOM ====================
+  window.zoomIn = function() {
+    if (!viewer) return;
+    const alturaActual = viewer.camera.positionCartographic.height;
+    const nuevaAltura = Math.max(alturaActual / 1.5, 100);
+    viewer.camera.zoomIn(alturaActual - nuevaAltura);
+  };
+
+  window.zoomOut = function() {
+    if (!viewer) return;
+    const alturaActual = viewer.camera.positionCartographic.height;
+    const nuevaAltura = Math.min(alturaActual * 1.5, 50000);
+    viewer.camera.zoomOut(nuevaAltura - alturaActual);
+  };
+
+  // ==================== FUNCIONES DE LOS BOTONES DE GIRO ====================
+  window.rotateLeft = function() {
+    if (!viewer) return;
+    viewer.camera.rotate(Cesium.Cartesian3.UNIT_Z, Cesium.Math.toRadians(15));
+  };
+
+  window.rotateRight = function() {
+    if (!viewer) return;
+    viewer.camera.rotate(Cesium.Cartesian3.UNIT_Z, Cesium.Math.toRadians(-15));
+  };
+
+  window.inclinar = function() {
+    if (!viewer) return;
+    viewer.camera.rotate(Cesium.Cartesian3.UNIT_X, Cesium.Math.toRadians(-5));
+  };
 
   window.volverARobore = function () {
     if (!viewer) return;
