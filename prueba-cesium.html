@@ -2,14 +2,33 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>Rojobore 3D - Mapa de la Chiquitanía</title>
-  <script src="https://cesium.com/downloads/cesiumjs/releases/1.145/Build/Cesium/Cesium.js"></script>
-  <link href="https://cesium.com/downloads/cesiumjs/releases/1.145/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <title>Roboré 3D — Mapa de la Chiquitanía</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- CesiumJS vía CDN (jsDelivr, sin necesidad de key propia) -->
+  <script src="https://cdn.jsdelivr.net/npm/cesium@1.118.0/Build/Cesium/Cesium.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/cesium@1.118.0/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+
   <style>
     html, body, #cesiumContainer {
       width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
       font-family: 'DM Sans', sans-serif;
     }
+
+    #tokenPanel {
+      position: absolute; top: 20px; left: 20px; z-index: 1001;
+      background: rgba(13, 17, 23, 0.95);
+      border: 1px solid rgba(57, 255, 20, 0.3);
+      border-radius: 12px; padding: 1rem;
+      color: #E6EDF3; max-width: 300px; font-size: 13px;
+    }
+    #tokenPanel h3 { color: #39FF14; margin: 0 0 0.5rem 0; font-size: 1rem; }
+    #tokenPanel input {
+      width: 100%; box-sizing: border-box; padding: 8px; margin-top: 6px;
+      border-radius: 6px; border: 1px solid #333; background: #0D1117; color: #E6EDF3;
+    }
+    #tokenPanel small { color: rgba(255,255,255,0.5); display: block; margin-top: 6px; }
+
     #infoPanel {
       position: absolute; top: 20px; left: 20px;
       background: rgba(13, 17, 23, 0.95);
@@ -17,37 +36,79 @@
       border-radius: 12px; padding: 1rem;
       color: #E6EDF3; max-width: 280px;
       font-size: 13px; z-index: 1000;
+      display: none;
     }
     #infoPanel h3 {
       color: #39FF14; margin: 0 0 0.5rem 0;
       font-size: 1rem; font-family: 'Playfair Display', serif;
     }
-    #infoPanel button {
+    button {
       background: #39FF14; color: #0D1117; border: none;
       padding: 0.5rem 1rem; border-radius: 8px;
       font-weight: 700; cursor: pointer; width: 100%;
       margin-top: 0.5rem; font-size: 12px;
     }
-    #infoPanel button:hover { filter: brightness(1.1); }
+    button:hover { filter: brightness(1.1); }
   </style>
 </head>
 <body>
-  <div id="cesiumContainer"></div>
 
-  <div id="infoPanel">
-    <h3>🗺 Rojobore 3D</h3>
-    <p style="margin: 0 0 0.5rem 0; color: rgba(255,255,255,0.7); font-size: 12px;">
-      Haz clic en los puntos para ver los atractivos turísticos
-    </p>
-    <button onclick="volverARobore()">📍 Centrar en Roboré</button>
-  </div>
+<div id="cesiumContainer"></div>
 
-  <script>
-    // ⚠️ REEMPLAZA con tu token NUEVO de Cesium ion
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IkdmLVpsc0R2THpwX1ZOaXciLCJqdGkiOiI5MDgzMDc2Ni04MDVjLTQ1ZDQtYTI0NC1iMDliZWU4ZTFlZGEiLCJpZCI6NTA5NzQ0LCJzdWIiOiJjcmhpcyIsImlzcyI6Imh0dHBzOi8vYXBpLmNlc2l1bS5jb20iLCJhdWQiOiJjcmhpc19kZWZhdWx0IiwiaWF0IjoxNzkwNTMwOTA3fQ.o9kuxu96WvbdJqs4bpWUy0NpCMedKOS70Obxqo0fK58';
+<!-- Panel para pegar el token (nunca hardcodeado en el archivo) -->
+<div id="tokenPanel">
+  <h3>🔑 Cesium ion Token</h3>
+  <label for="tokenInput">Pega tu access token:</label>
+  <input id="tokenInput" type="text" placeholder="eyJhbGci...">
+  <button onclick="iniciarVisor()">Cargar mapa de Roboré</button>
+  <small>Consíguelo gratis en ion.cesium.com/tokens — nunca lo compartas ni lo subas a un repo público.</small>
+</div>
 
-    // 1. Inicializar el Viewer con terreno 3D
-    const viewer = new Cesium.Viewer('cesiumContainer', {
+<div id="infoPanel">
+  <h3>🗺 Roboré 3D</h3>
+  <p style="margin: 0 0 0.5rem 0; color: rgba(255,255,255,0.7); font-size: 12px;">
+    Puntos de atractivos turísticos de la Chiquitanía
+  </p>
+  <button onclick="volverARobore()">📍 Centrar en Roboré</button>
+</div>
+
+<script>
+  // Coordenadas de Roboré
+  const ROBORE = { lon: -59.7583, lat: -18.3328 };
+
+  // Lista de atractivos turísticos (coordenadas aproximadas — verificar antes de uso oficial)
+  const atractivos = [
+    { nombre: 'Balneario Municipal El Chorro', lon: -59.7583, lat: -18.3328, tipo: 'turismo' },
+    { nombre: 'Las Pampas', lon: -59.7700, lat: -18.3450, tipo: 'turismo' },
+    { nombre: 'Las Pozas', lon: -59.7200, lat: -18.3100, tipo: 'turismo' },
+    { nombre: 'Cuevas de Miserendino', lon: -59.7800, lat: -18.3500, tipo: 'turismo' },
+    { nombre: 'El Chorro de San Luis', lon: -59.7900, lat: -18.3600, tipo: 'turismo' },
+    { nombre: 'Los Totaizales', lon: -59.8100, lat: -18.3700, tipo: 'turismo' },
+    { nombre: 'Santuario Mariano de la Torre', lon: -60.0300, lat: -18.1500, tipo: 'chochis' },
+    { nombre: 'Cascada de los Helechos', lon: -60.0400, lat: -18.1600, tipo: 'chochis' },
+    { nombre: 'Cascada Velo de Novia', lon: -60.0400, lat: -18.1600, tipo: 'chochis' },
+    { nombre: 'Cascada de Yororoba', lon: -59.8100, lat: -18.3700, tipo: 'aguas' },
+    { nombre: 'Centro Turístico Los Hervores', lon: -59.7600, lat: -18.3300, tipo: 'turismo' }
+  ];
+
+  const colores = {
+    turismo: '#39FF14',
+    chochis: '#FFD700',
+    aguas: '#38BDF8'
+  };
+
+  let viewer;
+
+  async function iniciarVisor() {
+    const token = document.getElementById('tokenInput').value.trim();
+    if (!token) {
+      alert('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IkdmLVpsc0R2THpwX1ZOaXciLCJqdGkiOiI5MDgzMDc2Ni04MDVjLTQ1ZDQtYTI0NC1iMDliZWU4ZTFlZGEiLCJpZCI6NTA5NzQ0LCJzdWIiOiJjcmhpcyIsImlzcyI6Imh0dHBzOi8vYXBpLmNlc2l1bS5jb20iLCJhdWQiOiJjcmhpc19kZWZhdWx0IiwiaWF0IjoxNzkwNTMwOTA3fQ.o9kuxu96WvbdJqs4bpWUy0NpCMedKOS70Obxqo0fK58');
+      return;
+    }
+
+    Cesium.Ion.defaultAccessToken = token;
+
+    viewer = new Cesium.Viewer('cesiumContainer', {
       terrain: Cesium.Terrain.fromWorldTerrain(),
       timeline: false,
       animation: false,
@@ -60,55 +121,29 @@
       selectionIndicator: false,
     });
 
-    // 2. Cargar imagen satelital real (Bing Aerial)
-    viewer.imageryLayers.addImageryProvider(
-      new Cesium.BingMapsImageryProvider({
-        url: 'https://dev.virtualearth.net',
-        key: 'AvWxJg5gGtA2dCk4LqH8RjKpQwNvBmXcYzUfErTsDlIoPnMhJbVgSqAzWxCeR',
-        mapStyle: Cesium.BingMapsStyle.AERIAL
-      })
-    );
+    // Imagen satelital real vía Cesium ion (asset 2 = Bing Aerial), sin necesidad de key propia de Bing
+    try {
+      const bingLayer = await Cesium.IonImageryProvider.fromAssetId(2);
+      viewer.imageryLayers.addImageryProvider(bingLayer);
+    } catch (e) {
+      console.warn('No se pudo cargar Bing Aerial desde Cesium ion, se usa la capa base por defecto.', e);
+    }
 
-    // 3. Coordenadas de Roboré
-    const ROBORE = { lon: -59.7583, lat: -18.3328 };
-
-    // 4. Lista de atractivos turísticos (coordenadas reales)
-    const atractivos = [
-      { nombre: 'Balneario Municipal El Chorro', lon: -59.7583, lat: -18.3328, tipo: 'turismo' },
-      { nombre: 'Las Pampas', lon: -59.7700, lat: -18.3450, tipo: 'turismo' },
-      { nombre: 'Las Pozas', lon: -59.7200, lat: -18.3100, tipo: 'turismo' },
-      { nombre: 'Cuevas de Miserendino', lon: -59.7800, lat: -18.3500, tipo: 'turismo' },
-      { nombre: 'El Chorro de San Luis', lon: -59.7900, lat: -18.3600, tipo: 'turismo' },
-      { nombre: 'Los Totaizales', lon: -59.8100, lat: -18.3700, tipo: 'turismo' },
-      { nombre: 'Santuario Mariano de la Torre', lon: -60.0300, lat: -18.1500, tipo: 'chochis' },
-      { nombre: 'Cascada de los Helechos', lon: -60.0400, lat: -18.1600, tipo: 'chochis' },
-      { nombre: 'Cascada Velo de Novia', lon: -60.0400, lat: -18.1600, tipo: 'chochis' },
-      { nombre: 'Cascada de Yororoba', lon: -59.8100, lat: -18.3700, tipo: 'aguas' },
-      { nombre: 'Centro Turístico Los Hervores', lon: -59.7600, lat: -18.3300, tipo: 'turismo' }
-    ];
-
-    // 5. Colores por tipo de atractivo
-    const colores = {
-      turismo: Cesium.Color.fromCssColorString('#39FF14'),
-      chochis: Cesium.Color.fromCssColorString('#FFD700'),
-      aguas: Cesium.Color.fromCssColorString('#38BDF8')
-    };
-
-    // 6. Añadir los puntos al mapa
-    atractivos.forEach(function(lugar) {
+    // Añadir puntos de atractivos
+    atractivos.forEach(function (lugar) {
       viewer.entities.add({
         name: lugar.nombre,
         position: Cesium.Cartesian3.fromDegrees(lugar.lon, lugar.lat, 50),
         point: {
           pixelSize: 14,
-          color: colores[lugar.tipo] || colores.turismo,
+          color: Cesium.Color.fromCssColorString(colores[lugar.tipo] || colores.turismo),
           outlineColor: Cesium.Color.WHITE,
           outlineWidth: 2,
           heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
         },
         label: {
           text: lugar.nombre,
-          font: '12px DM Sans',
+          font: '12px DM Sans, sans-serif',
           fillColor: Cesium.Color.WHITE,
           outlineColor: Cesium.Color.BLACK,
           outlineWidth: 2,
@@ -120,21 +155,25 @@
       });
     });
 
-    // 7. Función para volar a Roboré
-    window.volverARobore = function() {
-      viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(ROBORE.lon, ROBORE.lat, 8000),
-        orientation: {
-          heading: Cesium.Math.toRadians(0),
-          pitch: Cesium.Math.toRadians(-45),
-          roll: 0
-        },
-        duration: 2
-      });
-    };
-
-    // 8. Vista inicial
     volverARobore();
-  </script>
+
+    document.getElementById('tokenPanel').style.display = 'none';
+    document.getElementById('infoPanel').style.display = 'block';
+  }
+
+  window.volverARobore = function () {
+    if (!viewer) return;
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(ROBORE.lon, ROBORE.lat, 8000),
+      orientation: {
+        heading: Cesium.Math.toRadians(0),
+        pitch: Cesium.Math.toRadians(-45),
+        roll: 0
+      },
+      duration: 2
+    });
+  };
+</script>
+
 </body>
 </html>
