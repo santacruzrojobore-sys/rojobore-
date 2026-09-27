@@ -11,7 +11,7 @@
   <style>
     html, body, #cesiumContainer {
       width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
-      font-family: 'DM Sans', system-ui, sans-serif;
+      font-family: 'DM Sans', sans-serif;
     }
 
     #tokenPanel {
@@ -33,80 +33,92 @@
       background: rgba(13, 17, 23, 0.95);
       border: 1px solid rgba(57, 255, 20, 0.3);
       border-radius: 12px; padding: 1rem;
-      color: #E6EDF3; max-width: 260px;
+      color: #E6EDF3; max-width: 280px;
       font-size: 13px; z-index: 1000;
       display: none;
     }
-    #infoPanel h3 { color: #39FF14; margin: 0 0 0.5rem 0; font-size: 1rem; }
-    button.btnGreen {
+    #infoPanel h3 {
+      color: #39FF14; margin: 0 0 0.5rem 0;
+      font-size: 1rem; font-family: 'Playfair Display', serif;
+    }
+    button {
       background: #39FF14; color: #0D1117; border: none;
       padding: 0.5rem 1rem; border-radius: 8px;
       font-weight: 700; cursor: pointer; width: 100%;
       margin-top: 0.5rem; font-size: 12px;
     }
-    button.btnGreen:hover { filter: brightness(1.1); }
+    button:hover { filter: brightness(1.1); }
 
-    /* ===== FICHA COMPLETA DEL LUGAR ===== */
-    #detailPanel {
-      position: absolute; bottom: 0; left: 50%;
-      transform: translateX(-50%) translateY(100%);
-      transition: transform 0.3s ease;
-      background: rgba(13, 17, 23, 0.98);
-      border: 1px solid rgba(57, 255, 20, 0.35);
-      border-radius: 18px 18px 0 0;
-      color: #E6EDF3; width: min(480px, 94vw);
-      max-height: 78vh; overflow-y: auto;
-      z-index: 1002; box-shadow: 0 -10px 50px rgba(0,0,0,0.7);
+    #detallePanel {
+      position: absolute; bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(13, 17, 23, 0.97);
+      border: 2px solid rgba(57, 255, 20, 0.5);
+      border-radius: 14px; padding: 1rem;
+      color: #E6EDF3; max-width: 440px; width: 90%;
+      font-size: 13px; z-index: 1002;
+      display: none; box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+      max-height: 80vh; overflow-y: auto;
     }
-    #detailPanel.open { transform: translateX(-50%) translateY(0); }
-    #detailPanel img#detailImg {
-      width: 100%; height: 220px; object-fit: cover; display: block;
+    #detallePanel img {
+      width: 100%; max-height: 220px; object-fit: cover;
+      border-radius: 8px; margin-bottom: 0.6rem;
     }
-    #detailPanel .body { padding: 1.1rem 1.3rem 1.4rem; }
-    #detailPanel h2 {
-      font-family: 'Playfair Display', Georgia, serif;
-      color: #39FF14; margin: 0 0 0.3rem 0; font-size: 1.3rem;
+    #detallePanel h3 {
+      color: #39FF14; margin: 0 0 0.4rem 0;
+      font-size: 1.1rem; font-family: 'Playfair Display', serif;
     }
-    .tagRow { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
-    .tag {
-      background: rgba(57,255,20,0.12); color: #39FF14;
-      border: 1px solid rgba(57,255,20,0.3);
-      font-size: 0.7rem; font-weight: 700;
-      padding: 0.2rem 0.6rem; border-radius: 20px;
+    #detallePanel .cerrar {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(255,255,255,0.1); color: #fff;
+      border: none; height: 30px;
+      border-radius: 8px; cursor: pointer; font-size: 14px;
+      width: auto; padding: 0 8px; margin: 0;
     }
-    .descText { font-size: 0.88rem; line-height: 1.6; color: #E6EDF3; margin-bottom: 0.8rem; }
-    .infoGrid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;
-      background: #161B22; border: 1px solid #30363D; border-radius: 12px;
-      padding: 0.8rem; margin-bottom: 0.8rem;
+    #detallePanel .btn-llegar {
+      display: block; width: 100%;
+      background: #4285F4; color: #fff;
+      border: none; padding: 10px;
+      border-radius: 8px; font-weight: 700;
+      cursor: pointer; font-size: 13px;
+      margin-top: 0.8rem; text-decoration: none;
+      text-align: center;
     }
-    .infoGrid .item { font-size: 0.78rem; }
-    .infoGrid .item .lbl { color: #8B949E; display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 2px; }
-    .tipBox {
-      border-left: 3px solid #FFD700; background: rgba(255,215,0,0.06);
-      padding: 0.7rem 0.9rem; border-radius: 8px; margin-bottom: 0.8rem;
+    #detallePanel .btn-llegar:hover { background: #3367d6; }
+
+    #zoomControls {
+      position: absolute; bottom: 30px; right: 20px;
+      z-index: 1000; display: flex; flex-direction: column; gap: 6px;
     }
-    .tipBox .tlbl { font-size: 0.72rem; font-weight: 700; color: #FFD700; margin-bottom: 3px; }
-    .tipBox .ttxt { font-size: 0.8rem; color: #cfd6de; }
-    .priceBox {
-      background: #161B22; border: 1px solid #30363D; border-radius: 12px;
-      padding: 0.8rem 0.9rem; margin-bottom: 0.9rem;
+    #zoomControls button {
+      background: rgba(13, 17, 23, 0.95);
+      color: #39FF14; border: 2px solid rgba(57, 255, 20, 0.4);
+      width: 46px; height: 46px; border-radius: 50%;
+      font-size: 22px; font-weight: 900;
+      cursor: pointer; margin: 0;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      transition: 0.15s; padding: 0;
     }
-    .priceRow { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 0.15rem 0; }
-    .priceRow .big { font-size: 1.3rem; font-weight: 900; color: #39FF14; }
-    .btnRow { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    .btnRow a, .btnRow button {
-      flex: 1; min-width: 120px; text-align: center; text-decoration: none;
-      padding: 0.7rem; border-radius: 10px; font-weight: 700; font-size: 0.78rem;
-      border: none; cursor: pointer; font-family: inherit;
+    #zoomControls button:hover { background: rgba(57, 255, 20, 0.15); transform: scale(1.08); }
+    #zoomControls button:active { transform: scale(0.95); }
+
+    #rotateControls {
+      position: absolute; bottom: 30px; right: 80px;
+      z-index: 1000; display: flex; flex-direction: column; gap: 6px;
     }
-    .btnMaps { background: rgba(66,133,244,0.18); color: #4285F4; border: 1px solid rgba(66,133,244,0.35) !important; }
-    .btnClose {
-      position: sticky; top: 10px; float: right; margin-right: 10px;
-      background: rgba(255,255,255,0.12); color: #fff; border: none;
-      width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 1rem;
-      z-index: 5;
+    #rotateControls button {
+      background: rgba(13, 17, 23, 0.95);
+      color: #39FF14; border: 2px solid rgba(57, 255, 20, 0.4);
+      width: 46px; height: 46px; border-radius: 50%;
+      font-size: 18px; font-weight: 900;
+      cursor: pointer; margin: 0;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      transition: 0.15s; padding: 0;
     }
+    #rotateControls button:hover { background: rgba(57, 255, 20, 0.15); transform: scale(1.08); }
+    #rotateControls button:active { transform: scale(0.95); }
   </style>
 </head>
 <body>
@@ -117,47 +129,258 @@
   <h3>🔑 Cesium ion Token</h3>
   <label for="tokenInput">Pega tu access token:</label>
   <input id="tokenInput" type="text" placeholder="eyJhbGci...">
-  <button class="btnGreen" onclick="iniciarVisor()">Cargar mapa de Roboré</button>
+  <button onclick="iniciarVisor()">Cargar mapa de Roboré</button>
   <small>Consíguelo gratis en ion.cesium.com/tokens — nunca lo compartas ni lo subas a un repo público.</small>
 </div>
 
 <div id="infoPanel">
   <h3>🗺 Roboré 3D</h3>
-  <p style="margin:0 0 0.5rem 0;color:rgba(255,255,255,0.7);font-size:12px;">Toca un punto para ver la ficha completa</p>
-  <button class="btnGreen" onclick="volverARobore()">📍 Centrar en Roboré</button>
+  <p style="margin: 0 0 0.5rem 0; color: rgba(255,255,255,0.7); font-size: 12px;">
+    🟢 Turismo · 🔴 Hoteles · 🟣 Restaurantes
+  </p>
+  <p style="margin: 0 0 0.5rem 0; color: rgba(255,255,255,0.5); font-size: 11px;">
+    🖱️ Arrastra para girar · Rueda para zoom
+  </p>
+  <button onclick="volverARobore()">📍 Centrar en Roboré</button>
 </div>
 
-<div id="detailPanel">
-  <button class="btnClose" onclick="cerrarDetalle()">✕</button>
-  <img id="detailImg" src="" alt="">
-  <div class="body" id="detailBody"></div>
+<div id="detallePanel">
+  <button class="cerrar" onclick="cerrarDetalle()">✕</button>
+  <img id="detalleImg" src="" alt="">
+  <h3 id="detalleNombre"></h3>
+  <p id="detalleDesc" style="color: rgba(255,255,255,0.85); margin: 0; font-size: 12px; white-space: pre-line;"></p>
+  <a id="btnComoLlegar" class="btn-llegar" href="#" target="_blank">🧭 Cómo llegar con Google Maps</a>
+</div>
+
+<div id="zoomControls">
+  <button onclick="zoomIn()" title="Acercar">+</button>
+  <button onclick="zoomOut()" title="Alejar">−</button>
+</div>
+
+<div id="rotateControls">
+  <button onclick="rotateLeft()" title="Girar a la izquierda">↺</button>
+  <button onclick="rotateRight()" title="Girar a la derecha">↻</button>
+  <button onclick="inclinar()" title="Inclinar vista">⬇</button>
 </div>
 
 <script>
   const ROBORE = { lon: -59.7583, lat: -18.3328 };
 
-  // Dataset completo (mismos datos que la guía Rojobore, solo lugares turísticos)
   const atractivos = [
-    { id:1, nombre:'Balneario Municipal El Chorro', municipio:'Roboré', lon:-59.7583, lat:-18.3328, rating:4.5, horario:'08:00-18:00', dificultad:'Fácil', descripcion:'Balneario municipal con piscinas naturales de agua cristalina.', distancia:'Centro de Roboré', transporte:'Caminando 5 min', experiencia:'Relax, familiar', servicios:'Vestidores, baños, quioscos', recomendacion:'Llevar traje de baño y protector solar', precioLocal:10, precioExtranjero:20, imagen:'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/balneariomunicipal.jpeg', googleMaps:'https://maps.app.goo.gl/eeZzYqQRrB1Qtw4n8' },
-    { id:2, nombre:'Las Pampas', municipio:'Roboré', lon:-59.77, lat:-18.345, rating:4.3, horario:'06:00-17:00', dificultad:'Moderada', descripcion:'Sabana chiquitana con avistamiento de aves.', distancia:'12 km al norte', transporte:'Taxi o bicicleta', experiencia:'Naturaleza, aventura', servicios:'Guías locales', recomendacion:'Calzado cómodo, agua, binoculares', precioLocal:15, precioExtranjero:30, imagen:'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/laspampas.jpg', googleMaps:'https://maps.app.goo.gl/bCKPCNzh1Vxf9Upt9' },
-    { id:3, nombre:'Las Pozas', municipio:'Roboré', lon:-59.72, lat:-18.31, rating:4.4, horario:'08:00-17:00', dificultad:'Fácil', descripcion:'Piscinas naturales entre rocas.', distancia:'15 km de Roboré', transporte:'Vehículo o moto', experiencia:'Naturaleza, relax', servicios:'Sin infraestructura', recomendacion:'Llevar agua y protector solar', precioLocal:15, precioExtranjero:25, imagen:'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/laspozas.jpeg', googleMaps:'https://maps.app.goo.gl/GkrpywT8gemHU9zW9' },
-    { id:4, nombre:'Cuevas de Miserendino', municipio:'Roboré', lon:-59.78, lat:-18.35, rating:4.5, horario:'08:00-16:00', dificultad:'Moderada', descripcion:'Cuevas con estalactitas.', distancia:'25 km de Roboré', transporte:'4x4, caminata 1 km', experiencia:'Aventura, exploración', servicios:'Sin servicios', recomendacion:'Linterna, calzado cerrado', precioLocal:20, precioExtranjero:35, imagen:'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/cuevasdemiserendino.jpeg', googleMaps:'https://maps.app.goo.gl/wjC6vqGf1DF4ozdk8' },
-    { id:5, nombre:'El Chorro de San Luis', municipio:'Roboré', lon:-59.79, lat:-18.36, rating:4.8, horario:'07:00-17:00', dificultad:'Moderada', descripcion:'Cascada de 30 m en cañadón rocoso.', distancia:'22 km al sur', transporte:'4x4, últimos 3 km a pie', experiencia:'Aventura, naturaleza', servicios:'Sin servicios', recomendacion:'Calzado antideslizante', precioLocal:20, precioExtranjero:40, imagen:'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/chorrosanluis.png', googleMaps:'https://maps.app.goo.gl/b8bAEAvv1Get6S136' },
-    { id:6, nombre:'Los Totaizales', municipio:'Roboré', lon:-59.81, lat:-18.37, rating:4.6, horario:'08:00-16:00', dificultad:'Moderada', descripcion:'Pozas naturales entre rocas milenarias.', distancia:'18 km al oeste', transporte:'Vehículo 4x4', experiencia:'Aventura, naturaleza', servicios:'Sin infraestructura', recomendacion:'Calzado para agua', precioLocal:25, precioExtranjero:45, imagen:'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/totaizales.jpg', googleMaps:'https://maps.app.goo.gl/C1EZQikEALSQmiCx5' },
-    { id:7, nombre:'Santuario Mariano de la Torre', municipio:'Chochís', lon:-60.03, lat:-18.15, rating:4.4, horario:'09:00-17:00', dificultad:'Fácil', descripcion:'Complejo histórico y religioso en rocas.', distancia:'30 km de Roboré', transporte:'Bus o taxi', experiencia:'Cultural, religioso', servicios:'Baños, estacionamiento', recomendacion:'Ropa adecuada', precioLocal:20, precioExtranjero:50, imagen:'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/santuariomariano.jpeg', googleMaps:'https://maps.app.goo.gl/dYkvkNKyMkcYGGJQ7' },
-    { id:8, nombre:'Cascada de los Helechos', municipio:'Chochís', lon:-60.04, lat:-18.16, rating:4.3, horario:'07:00-17:00', dificultad:'Moderada', descripcion:'Cascada rodeada de helechos gigantes.', distancia:'8 km de Chochís', transporte:'Caminata 30 min', experiencia:'Naturaleza, aventura', servicios:'Sin servicios', recomendacion:'Calzado antideslizante', precioLocal:15, precioExtranjero:30, imagen:'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/cascadahelechos.jpg', googleMaps:'https://maps.app.goo.gl/RwPbSHwzPqWC8xLy9' },
-    { id:9, nombre:'Cascada de Yororoba', municipio:'Aguas Calientes', lon:-59.81, lat:-18.37, rating:4.2, horario:'07:00-17:00', dificultad:'Moderada', descripcion:'Caída de agua con piscinas naturales.', distancia:'40 km de Roboré', transporte:'Vehículo 4x4', experiencia:'Aventura, naturaleza', servicios:'Ninguno', recomendacion:'Agua, protector solar', precioLocal:15, precioExtranjero:30, imagen:'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/cascadadeyororoba.jpeg', googleMaps:'https://maps.app.goo.gl/SBSekZhz5LY1iroV7' },
-    { id:10, nombre:'Centro Turístico Los Hervores', municipio:'Roboré', lon:-59.76, lat:-18.33, rating:4.0, horario:'08:00-18:00', dificultad:'Fácil', descripcion:'Aguas termales con pozas relajantes.', distancia:'10 km de Roboré', transporte:'Taxi o vehículo particular', experiencia:'Relax, salud', servicios:'Baños, vestidores, piscinas', recomendacion:'Llevar traje de baño y toalla', precioLocal:30, precioExtranjero:50, imagen:'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/loshervores.jpg', googleMaps:'https://maps.app.goo.gl/u93mMAXRXRNiLjgDA' },
-    { id:11, nombre:'Cascada Velo de Novia', municipio:'Chochís', lon:-60.04, lat:-18.16, rating:4.9, horario:'08:00-17:00', dificultad:'Moderada', descripcion:'Cascada icónica con forma de velo.', distancia:'5 km de Chochís', transporte:'Caminata 20 min', experiencia:'Naturaleza, aventura', servicios:'Sin servicios', recomendacion:'Calzado antideslizante', precioLocal:15, precioExtranjero:40, imagen:'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/cascadavelodenovia.jpeg', googleMaps:'https://maps.app.goo.gl/QPo1Yjott9w5k2zV7' }
+    { nombre: 'Balneario Municipal El Chorro', lon: -59.7583, lat: -18.3328, tipo: 'turismo',
+      precioLocal: 10, precioExtranjero: 20, horario: '08:00-18:00', rating: 4.5,
+      descripcion: 'Balneario municipal con piscinas naturales de agua cristalina.',
+      dificultad: 'Fácil', distancia: 'Centro de Roboré', transporte: 'Caminando 5 min',
+      servicios: 'Vestidores, baños, quioscos', recomendacion: 'Llevar traje de baño y protector solar' },
+    { nombre: 'Las Pampas', lon: -59.7700, lat: -18.3450, tipo: 'turismo',
+      precioLocal: 15, precioExtranjero: 30, horario: '06:00-17:00', rating: 4.3,
+      descripcion: 'Sabana chiquitana con avistamiento de aves.',
+      dificultad: 'Moderada', distancia: '12 km al norte', transporte: 'Taxi o bicicleta',
+      servicios: 'Guías locales', recomendacion: 'Calzado cómodo, agua, binoculares' },
+    { nombre: 'Las Pozas', lon: -59.7200, lat: -18.3100, tipo: 'turismo',
+      precioLocal: 15, precioExtranjero: 25, horario: '08:00-17:00', rating: 4.4,
+      descripcion: 'Piscinas naturales entre rocas.',
+      dificultad: 'Fácil', distancia: '15 km de Roboré', transporte: 'Vehículo o moto',
+      servicios: 'Sin infraestructura', recomendacion: 'Llevar agua y protector solar' },
+    { nombre: 'Cuevas de Miserendino', lon: -59.7800, lat: -18.3500, tipo: 'turismo',
+      precioLocal: 20, precioExtranjero: 35, horario: '08:00-16:00', rating: 4.5,
+      descripcion: 'Cuevas con estalactitas.',
+      dificultad: 'Moderada', distancia: '25 km de Roboré', transporte: '4x4, caminata 1 km',
+      servicios: 'Sin servicios', recomendacion: 'Linterna, calzado cerrado' },
+    { nombre: 'El Chorro de San Luis', lon: -59.7900, lat: -18.3600, tipo: 'turismo',
+      precioLocal: 20, precioExtranjero: 40, horario: '07:00-17:00', rating: 4.8,
+      descripcion: 'Cascada de 30 m en cañadón rocoso.',
+      dificultad: 'Moderada', distancia: '22 km al sur', transporte: '4x4, últimos 3 km a pie',
+      servicios: 'Sin servicios', recomendacion: 'Calzado antideslizante' },
+    { nombre: 'Los Totaizales', lon: -59.8100, lat: -18.3700, tipo: 'turismo',
+      precioLocal: 25, precioExtranjero: 45, horario: '08:00-16:00', rating: 4.6,
+      descripcion: 'Pozas naturales entre rocas milenarias.',
+      dificultad: 'Moderada', distancia: '18 km al oeste', transporte: 'Vehículo 4x4',
+      servicios: 'Sin infraestructura', recomendacion: 'Calzado para agua' },
+    { nombre: 'Santuario Mariano de la Torre', lon: -60.0300, lat: -18.1500, tipo: 'chochis',
+      precioLocal: 20, precioExtranjero: 50, horario: '09:00-17:00', rating: 4.4,
+      descripcion: 'Complejo histórico y religioso en rocas.',
+      dificultad: 'Fácil', distancia: '30 km de Roboré', transporte: 'Bus o taxi',
+      servicios: 'Baños, estacionamiento', recomendacion: 'Ropa adecuada' },
+    { nombre: 'Cascada de los Helechos', lon: -60.0400, lat: -18.1600, tipo: 'chochis',
+      precioLocal: 15, precioExtranjero: 30, horario: '07:00-17:00', rating: 4.3,
+      descripcion: 'Cascada rodeada de helechos gigantes.',
+      dificultad: 'Moderada', distancia: '8 km de Chochís', transporte: 'Caminata 30 min',
+      servicios: 'Sin servicios', recomendacion: 'Calzado antideslizante' },
+    { nombre: 'Cascada Velo de Novia', lon: -60.0400, lat: -18.1600, tipo: 'chochis',
+      precioLocal: 15, precioExtranjero: 40, horario: '08:00-17:00', rating: 4.9,
+      descripcion: 'Cascada icónica con forma de velo.',
+      dificultad: 'Moderada', distancia: '5 km de Chochís', transporte: 'Caminata 20 min',
+      servicios: 'Sin servicios', recomendacion: 'Calzado antideslizante' },
+    { nombre: 'Cascada de Yororoba', lon: -59.8100, lat: -18.3700, tipo: 'aguas',
+      precioLocal: 15, precioExtranjero: 30, horario: '07:00-17:00', rating: 4.2,
+      descripcion: 'Caída de agua con piscinas naturales.',
+      dificultad: 'Moderada', distancia: '40 km de Roboré', transporte: 'Vehículo 4x4',
+      servicios: 'Ninguno', recomendacion: 'Agua, protector solar' },
+    { nombre: 'Centro Turístico Los Hervores', lon: -59.7600, lat: -18.3300, tipo: 'turismo',
+      precioLocal: 30, precioExtranjero: 50, horario: '08:00-18:00', rating: 4.0,
+      descripcion: 'Aguas termales con pozas relajantes.',
+      dificultad: 'Fácil', distancia: '10 km de Roboré', transporte: 'Taxi o vehículo particular',
+      servicios: 'Baños, vestidores, piscinas', recomendacion: 'Llevar traje de baño y toalla' }
   ];
 
-  const colorMunicipio = { 'Roboré': '#39FF14', 'Chochís': '#FFD700', 'Aguas Calientes': '#38BDF8' };
+  const hoteles = [
+    { nombre: 'Hotel Las Lajas', lon: -59.7580, lat: -18.3330, tipo: 'hotel', precio: 200, rating: 4.3, servicios: 'Piscina, restaurante, estacionamiento' },
+    { nombre: 'Hotel Descanso Chiquitano', lon: -59.7570, lat: -18.3340, tipo: 'hotel', precio: 150, rating: 4.0, servicios: 'Jardín, comedor' },
+    { nombre: 'Hotel Mami Vilma', lon: -59.7560, lat: -18.3320, tipo: 'hotel', precio: 120, rating: 3.9, servicios: 'Cocina compartida' },
+    { nombre: 'La Casona de Don Pepe', lon: -59.7590, lat: -18.3310, tipo: 'hotel', precio: 320, rating: 4.6, servicios: 'TV cable, garaje, jardín' },
+    { nombre: 'Hotel Safari Club Roboré', lon: -59.7585, lat: -18.3335, tipo: 'hotel', precio: 250, rating: 4.4, servicios: 'Piscina, bar, restaurante' },
+    { nombre: 'Hotel y Camping Santiago de Chiquitos', lon: -60.0300, lat: -18.1505, tipo: 'hotel', precio: 100, rating: 4.1, servicios: 'Zona de camping, baños compartidos' },
+    { nombre: 'Hotel Las Parabas', lon: -59.7575, lat: -18.3325, tipo: 'hotel', precio: 180, rating: 4.2, servicios: 'Aire acondicionado, TV' },
+    { nombre: 'Hotel La Masía', lon: -59.7600, lat: -18.3300, tipo: 'hotel', precio: 250, rating: 4.5, servicios: 'Spa, gimnasio, restaurante' },
+    { nombre: 'Hotel Ruta 4 Aguas Calientes', lon: -59.7550, lat: -18.3350, tipo: 'hotel', precio: 150, rating: 4.0, servicios: 'Estacionamiento, restaurante' },
+    { nombre: 'Cabaña Campo Verde', lon: -59.7540, lat: -18.3360, tipo: 'hotel', precio: 200, rating: 4.3, servicios: 'Cocina equipada, parrilla' },
+    { nombre: 'Chochís Cabañas', lon: -60.0400, lat: -18.1600, tipo: 'hotel', precio: 200, rating: 4.2, servicios: 'Cocina equipada, estacionamiento' },
+    { nombre: 'Hotel Peregrino', lon: -60.0300, lat: -18.1510, tipo: 'hotel', precio: 130, rating: 4.0, servicios: 'Jardín, terraza' },
+    { nombre: 'Hotel Pacheco', lon: -59.7580, lat: -18.3345, tipo: 'hotel', precio: 160, rating: 3.9, servicios: 'Aire acondicionado, TV' }
+  ];
+
+  const restaurantes = [
+    { nombre: 'Restaurant El Molino', lon: -59.7570, lat: -18.3330, tipo: 'restaurante', precio: 60, especialidad: 'Carnes a la parrilla', horario: '07:00-22:00', rating: 4.3 },
+    { nombre: 'Café París', lon: -59.7580, lat: -18.3320, tipo: 'restaurante', precio: 45, especialidad: 'Café de especialidad y repostería', horario: '07:30-21:00', rating: 4.2 },
+    { nombre: 'Deleite Café Roboré', lon: -59.7560, lat: -18.3340, tipo: 'restaurante', precio: 40, especialidad: 'Café y postres artesanales', horario: '07:00-20:00', rating: 4.1 },
+    { nombre: 'El Messón!', lon: -59.7590, lat: -18.3310, tipo: 'restaurante', precio: 50, especialidad: 'Comida casera y platos típicos', horario: '07:30-21:30', rating: 4.2 },
+    { nombre: 'Restaurant Los Lomitos', lon: -59.7585, lat: -18.3335, tipo: 'restaurante', precio: 55, especialidad: 'Lomitos y carnes a la parrilla', horario: '08:00-22:00', rating: 4.4 },
+    { nombre: 'Hotel Restaurant Cruz Blanca', lon: -59.7575, lat: -18.3325, tipo: 'restaurante', precio: 65, especialidad: 'Menú internacional y platos regionales', horario: '07:00-22:00', rating: 4.3 },
+    { nombre: 'El Sazón de Mimín', lon: -59.7550, lat: -18.3350, tipo: 'restaurante', precio: 35, especialidad: 'Comida casera tradicional', horario: '07:00-19:00', rating: 4.0 },
+    { nombre: 'A LO GRILL', lon: -59.7600, lat: -18.3300, tipo: 'restaurante', precio: 50, especialidad: 'Parrilladas y cortes de carne', horario: '11:00-23:00', rating: 4.3 },
+    { nombre: 'Pacumutos - El Pila', lon: -59.7540, lat: -18.3360, tipo: 'restaurante', precio: 40, especialidad: 'Pacumutos y comida rápida', horario: '10:00-21:00', rating: 4.1 },
+    { nombre: 'Saborcitos Abu Ta Ta', lon: -59.7565, lat: -18.3345, tipo: 'restaurante', precio: 30, especialidad: 'Comida casera y meriendas', horario: '07:00-18:00', rating: 4.0 },
+    { nombre: 'Chicken Mania', lon: -59.7580, lat: -18.3328, tipo: 'restaurante', precio: 45, especialidad: 'Pollo frito y hamburguesas', horario: '11:00-22:00', rating: 4.1 },
+    { nombre: 'Repostería Japonesa Roboré', lon: -59.7570, lat: -18.3335, tipo: 'restaurante', precio: 35, especialidad: 'Postres japoneses y café', horario: '08:00-20:00', rating: 4.4 },
+    { nombre: 'Restauran "La Clave"', lon: -59.7595, lat: -18.3315, tipo: 'restaurante', precio: 45, especialidad: 'Platos típicos y menú del día', horario: '07:00-21:00', rating: 4.2 },
+    { nombre: 'Sabores C&L', lon: -59.7560, lat: -18.3355, tipo: 'restaurante', precio: 40, especialidad: 'Comida casera y snacks', horario: '07:30-20:00', rating: 4.0 },
+    { nombre: 'Snack Barriga Llena', lon: -59.7555, lat: -18.3320, tipo: 'restaurante', precio: 30, especialidad: 'Snacks, jugos y meriendas', horario: '08:00-19:00', rating: 3.9 },
+    { nombre: 'Restaurante Pescadería Ruiz', lon: -59.7585, lat: -18.3340, tipo: 'restaurante', precio: 55, especialidad: 'Pescados y mariscos frescos', horario: '08:00-21:00', rating: 4.3 }
+  ];
+
+  const colores = {
+    turismo: '#39FF14',
+    chochis: '#FFD700',
+    aguas: '#38BDF8',
+    hotel: '#FF2D55',
+    restaurante: '#A855F7'
+  };
+
+  const mapaImagenes = {
+    'Balneario Municipal El Chorro': 'lugarturistico/balneariomunicipal.jpeg',
+    'Las Pampas': 'lugarturistico/laspampas.jpg',
+    'Las Pozas': 'lugarturistico/laspozas.jpeg',
+    'Cuevas de Miserendino': 'lugarturistico/cuevasdemiserendino.jpeg',
+    'El Chorro de San Luis': 'lugarturistico/chorrosanluis.png',
+    'Los Totaizales': 'lugarturistico/totaizales.jpg',
+    'Santuario Mariano de la Torre': 'lugarturistico/santuariomariano.jpeg',
+    'Cascada de los Helechos': 'lugarturistico/cascadahelechos.jpg',
+    'Cascada Velo de Novia': 'lugarturistico/cascadavelodenovia.jpeg',
+    'Cascada de Yororoba': 'lugarturistico/cascadadeyororoba.jpeg',
+    'Centro Turístico Los Hervores': 'lugarturistico/loshervores.jpg',
+    'Hotel Las Lajas': 'https://www.boliviaentusmanos.com/amarillas1/businesscard/imagenes/hlajas1.jpg',
+    'Hotel Descanso Chiquitano': 'hoteles/hoteldescansochiquitano.jpg',
+    'Hotel Mami Vilma': 'https://cf.bstatic.com/xdata/images/hotel/max1024x768/350290194.jpg',
+    'La Casona de Don Pepe': 'https://cf.bstatic.com/xdata/images/hotel/max1024x768/575175884.jpg',
+    'Hotel Safari Club Roboré': 'hoteles/hotelsafariclub.jpeg',
+    'Hotel y Camping Santiago de Chiquitos': 'hoteles/campingsantiagodechiquitos.jpg',
+    'Hotel Las Parabas': 'hoteles/hotellasaparabas.jpeg',
+    'Hotel La Masía': 'hoteles/hotelmasia.jpg',
+    'Hotel Ruta 4 Aguas Calientes': 'hoteles/ruta4.jpg',
+    'Cabaña Campo Verde': 'hoteles/campoverde.jpg',
+    'Chochís Cabañas': 'hoteles/caba%C3%B1aschochis.jpeg',
+    'Hotel Peregrino': 'hoteles/hotelperegrino.jpg',
+    'Hotel Pacheco': 'hoteles/hotelpacheco.jpg',
+    'Restaurant El Molino': 'restaurantes/restaurantemolino.jpg',
+    'Café París': 'restaurantes/cafeparis.png',
+    'Deleite Café Roboré': 'restaurantes/deleitecafe.png',
+    'El Messón!': 'restaurantes/elmesson.png',
+    'Restaurant Los Lomitos': 'restaurantes/loslomitos.jpg',
+    'Hotel Restaurant Cruz Blanca': 'restaurantes/cruzblanca.jpg',
+    'El Sazón de Mimín': 'https://tse4.mm.bing.net/th/id/OIP.wM_dOInx84R72zTre0SkkAHaHa',
+    'A LO GRILL': 'restaurantes/alogrill.jpg',
+    'Pacumutos - El Pila': 'restaurantes/pacumutoelpila.png',
+    'Saborcitos Abu Ta Ta': 'restaurantes/saborcitosabutata.png',
+    'Chicken Mania': 'restaurantes/chickenmania.jpeg',
+    'Repostería Japonesa Roboré': 'restaurantes/reposteriajaponesa.jpg',
+    'Restauran "La Clave"': 'restaurantes/restaurantelaclave.png',
+    'Sabores C&L': 'restaurantes/saboresC%26L.jpg',
+    'Snack Barriga Llena': 'restaurantes/snackbarriga.png',
+    'Restaurante Pescadería Ruiz': 'restaurantes/pescaderiaruiz.png'
+  };
+
+  function obtenerImagenLugar(nombre) {
+    const baseUrl = 'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/';
+    const ruta = mapaImagenes[nombre] || 'lugarturistico/balneariomunicipal.jpeg';
+    if (ruta.startsWith('http')) return ruta;
+    return baseUrl + ruta;
+  }
+
+  // ===== PASO 1: generador de pin con efecto glow (SVG en memoria, sin archivos externos) =====
+  function crearPinGlowSVG(colorHex) {
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="90" height="110" viewBox="0 0 90 110">
+        <defs>
+          <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="5" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <radialGradient id="ring" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="${colorHex}" stop-opacity="0.55"/>
+            <stop offset="100%" stop-color="${colorHex}" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="45" cy="88" r="26" fill="url(#ring)"/>
+        <ellipse cx="45" cy="90" rx="10" ry="3" fill="rgba(0,0,0,0.35)"/>
+        <g filter="url(#glow)">
+          <path d="M45 8 C24 8 10 24 10 43 C10 66 45 96 45 96 C45 96 80 66 80 43 C80 24 66 8 45 8 Z"
+                fill="${colorHex}" stroke="white" stroke-width="2.5"/>
+          <circle cx="45" cy="42" r="15" fill="#0D1117"/>
+          <circle cx="45" cy="42" r="9" fill="${colorHex}"/>
+        </g>
+      </svg>`;
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+  }
+
+  // Cachear un pin por color para no regenerar el SVG por cada punto
+  const cachePines = {};
+  function pinPara(colorHex) {
+    if (!cachePines[colorHex]) cachePines[colorHex] = crearPinGlowSVG(colorHex);
+    return cachePines[colorHex];
+  }
+
+  // ===== Halo/glow futurista detrás de cada foto (no toca los píxeles de la foto) =====
+  function crearGlowFotoSVG(colorHex) {
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="100" height="80" viewBox="0 0 100 80">
+        <defs>
+          <filter id="g" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="7"/>
+          </filter>
+        </defs>
+        <rect x="14" y="12" width="72" height="56" rx="10"
+              fill="none" stroke="${colorHex}" stroke-width="5"
+              opacity="0.95" filter="url(#g)"/>
+        <rect x="14" y="12" width="72" height="56" rx="10"
+              fill="none" stroke="${colorHex}" stroke-width="2" opacity="0.9"/>
+      </svg>`;
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+  }
+  const cacheGlowFoto = {};
+  function glowFotoPara(colorHex) {
+    if (!cacheGlowFoto[colorHex]) cacheGlowFoto[colorHex] = crearGlowFotoSVG(colorHex);
+    return cacheGlowFoto[colorHex];
+  }
 
   let viewer;
 
   async function iniciarVisor() {
     const token = document.getElementById('tokenInput').value.trim();
-    if (!token) { alert('Pega tu Cesium ion Access Token primero. Consíguelo gratis en https://ion.cesium.com/tokens'); return; }
+    if (!token) { alert('Por favor pega tu token de Cesium ion primero.'); return; }
 
     Cesium.Ion.defaultAccessToken = token;
 
@@ -166,6 +389,7 @@
       timeline: false, animation: false, baseLayerPicker: false,
       geocoder: false, homeButton: false, sceneModePicker: false,
       navigationHelpButton: false, infoBox: false, selectionIndicator: false,
+      fullscreenButton: false, vrButton: false,
     });
 
     try {
@@ -173,19 +397,33 @@
       viewer.imageryLayers.addImageryProvider(bingLayer);
     } catch (e) { console.warn('No se pudo cargar Bing Aerial.', e); }
 
-    atractivos.forEach(function (lugar) {
-      const color = colorMunicipio[lugar.municipio] || '#39FF14';
+    const controller = viewer.scene.screenSpaceCameraController;
+    controller.enableRotate = true;
+    controller.enableTranslate = true;
+    controller.enableZoom = true;
+    controller.enableTilt = true;
+    controller.enableLook = true;
+    controller.minimumZoomDistance = 100;
+    controller.maximumZoomDistance = 50000;
+
+    // ===== PASO 2 y 3: pin glow siempre visible + foto solo al acercarse =====
+    function agregarPunto(lugar, colorHex, prefijo) {
+      const imagenUrl = obtenerImagenLugar(lugar.nombre);
       viewer.entities.add({
-        id: 'lugar-' + lugar.id,
-        name: lugar.nombre,
-        position: Cesium.Cartesian3.fromDegrees(lugar.lon, lugar.lat, 60),
-        point: {
-          pixelSize: 14,
-          color: Cesium.Color.fromCssColorString(color),
-          outlineColor: Cesium.Color.WHITE,
-          outlineWidth: 2,
-          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+        name: prefijo + lugar.nombre,
+        position: Cesium.Cartesian3.fromDegrees(lugar.lon, lugar.lat, 100),
+
+        // Pin glow: visible siempre, se ve nítido a cualquier distancia razonable
+        billboard: {
+          image: pinPara(colorHex),
+          width: 46,
+          height: 56,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          scaleByDistance: new Cesium.NearFarScalar(300, 1.1, 20000, 0.55)
         },
+
         label: {
           text: lugar.nombre,
           font: '11px DM Sans, sans-serif',
@@ -193,19 +431,64 @@
           outlineColor: Cesium.Color.BLACK,
           outlineWidth: 2,
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          pixelOffset: new Cesium.Cartesian2(0, -22),
+          pixelOffset: new Cesium.Cartesian2(0, -62),
           heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 40000)
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 15000),
+          scaleByDistance: new Cesium.NearFarScalar(500, 1.0, 15000, 0.7)
         }
       });
-    });
+
+      // Halo/glow futurista detrás de la foto (mismo color que el pin de esta categoría)
+      viewer.entities.add({
+        name: prefijo + lugar.nombre,
+        position: Cesium.Cartesian3.fromDegrees(lugar.lon, lugar.lat, 100),
+        billboard: {
+          image: glowFotoPara(colorHex),
+          width: 78,
+          height: 62,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -66),
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2500),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          eyeOffset: new Cesium.Cartesian3(0, 0, 2.0) // lo empuja detrás de la foto
+        }
+      });
+
+      // Entidad adicional: foto flotante, solo visible de cerca (menos de 2.5km)
+      viewer.entities.add({
+        name: prefijo + lugar.nombre,
+        position: Cesium.Cartesian3.fromDegrees(lugar.lon, lugar.lat, 100),
+        billboard: {
+          image: imagenUrl,
+          width: 60,
+          height: 42,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -66),
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2500),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          eyeOffset: new Cesium.Cartesian3(0, 0, 0) // queda al frente del halo
+        }
+      });
+    }
+
+    atractivos.forEach(l => agregarPunto(l, colores[l.tipo] || colores.turismo, '📍 '));
+    hoteles.forEach(l => agregarPunto(l, colores.hotel, '🏨 '));
+    restaurantes.forEach(l => agregarPunto(l, colores.restaurante, '🍽️ '));
 
     viewer.screenSpaceEventHandler.setInputAction(function (movement) {
       const picked = viewer.scene.pick(movement.position);
-      if (Cesium.defined(picked) && picked.id && String(picked.id.id || '').startsWith('lugar-')) {
-        const id = parseInt(picked.id.id.replace('lugar-', ''));
-        const lugar = atractivos.find(a => a.id === id);
-        if (lugar) mostrarDetalle(lugar);
+      if (Cesium.defined(picked) && picked.id && picked.id.name) {
+        const nombreConPrefijo = picked.id.name;
+        const nombre = nombreConPrefijo.replace('📍 ', '').replace('🏨 ', '').replace('🍽️ ', '');
+
+        let lugarData = atractivos.find(a => a.nombre === nombre);
+        let categoria = 'turismo';
+        if (!lugarData) { lugarData = hoteles.find(h => h.nombre === nombre); categoria = 'hotel'; }
+        if (!lugarData) { lugarData = restaurantes.find(r => r.nombre === nombre); categoria = 'restaurante'; }
+
+        if (lugarData) mostrarDetalle(lugarData, categoria);
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
@@ -214,48 +497,70 @@
     document.getElementById('infoPanel').style.display = 'block';
   }
 
-  function mostrarDetalle(l) {
-    document.getElementById('detailImg').src = l.imagen;
-    document.getElementById('detailBody').innerHTML = `
-      <h2>${l.nombre}</h2>
-      <div class="tagRow">
-        <span class="tag">★ ${l.rating}</span>
-        <span class="tag">${l.municipio}</span>
-        <span class="tag">${l.horario}</span>
-        <span class="tag">${l.dificultad}</span>
-      </div>
-      <p class="descText">${l.descripcion}</p>
-      <div class="infoGrid">
-        <div class="item"><span class="lbl">Distancia</span>${l.distancia}</div>
-        <div class="item"><span class="lbl">Cómo llegar</span>${l.transporte}</div>
-        <div class="item"><span class="lbl">Experiencia</span>${l.experiencia}</div>
-        <div class="item"><span class="lbl">Servicios</span>${l.servicios}</div>
-      </div>
-      <div class="tipBox">
-        <div class="tlbl">Recomendación</div>
-        <div class="ttxt">${l.recomendacion}</div>
-      </div>
-      <div class="priceBox">
-        <div class="priceRow"><span>Visitante local</span><span class="big">Bs ${l.precioLocal}</span></div>
-        <div class="priceRow"><span>Extranjero</span><strong>Bs ${l.precioExtranjero}</strong></div>
-      </div>
-      <div class="btnRow">
-        <a class="btnMaps" href="${l.googleMaps}" target="_blank">📍 Ver en Google Maps</a>
-      </div>
-    `;
-    document.getElementById('detailPanel').classList.add('open');
+  function mostrarDetalle(lugar, categoria) {
+    const panel = document.getElementById('detallePanel');
+    document.getElementById('detalleImg').src = obtenerImagenLugar(lugar.nombre);
+    document.getElementById('detalleNombre').textContent = lugar.nombre;
+
+    let descripcion = '';
+    if (categoria === 'hotel') {
+      descripcion = '🏨 Hotel · Bs ' + lugar.precio + '/noche · ★ ' + lugar.rating + '\n\n' +
+                    '🛎️ Servicios: ' + lugar.servicios;
+    } else if (categoria === 'restaurante') {
+      descripcion = '🍽️ Restaurante · ★ ' + lugar.rating + '\n\n' +
+                    '🍴 Especialidad: ' + lugar.especialidad + '\n' +
+                    '🕐 Horario: ' + lugar.horario + '\n' +
+                    '💰 Almuerzo desde: Bs ' + lugar.precio;
+    } else {
+      descripcion = '📍 ' + lugar.descripcion + '\n\n' +
+                    '💰 Precio: Bs ' + lugar.precioLocal + ' (local) / Bs ' + lugar.precioExtranjero + ' (extranjero)\n' +
+                    '🕐 Horario: ' + lugar.horario + ' · ★ ' + lugar.rating + '\n' +
+                    '🚶 Dificultad: ' + lugar.dificultad + '\n' +
+                    '📏 Distancia: ' + lugar.distancia + '\n' +
+                    '🚗 Cómo llegar: ' + lugar.transporte + '\n' +
+                    '🛎️ Servicios: ' + lugar.servicios + '\n' +
+                    '💡 Recomendación: ' + lugar.recomendacion;
+    }
+
+    document.getElementById('detalleDesc').textContent = descripcion;
+    const btnLlegar = document.getElementById('btnComoLlegar');
+    btnLlegar.href = 'https://www.google.com/maps/dir/?api=1&destination=' + lugar.lat + ',' + lugar.lon;
+    panel.style.display = 'block';
   }
 
   function cerrarDetalle() {
-    document.getElementById('detailPanel').classList.remove('open');
+    document.getElementById('detallePanel').style.display = 'none';
   }
 
+  window.zoomIn = function() {
+    if (!viewer) return;
+    const alturaActual = viewer.camera.positionCartographic.height;
+    const nuevaAltura = Math.max(alturaActual / 1.5, 100);
+    viewer.camera.zoomIn(alturaActual - nuevaAltura);
+  };
+  window.zoomOut = function() {
+    if (!viewer) return;
+    const alturaActual = viewer.camera.positionCartographic.height;
+    const nuevaAltura = Math.min(alturaActual * 1.5, 50000);
+    viewer.camera.zoomOut(nuevaAltura - alturaActual);
+  };
+  window.rotateLeft = function() {
+    if (!viewer) return;
+    viewer.camera.rotate(Cesium.Cartesian3.UNIT_Z, Cesium.Math.toRadians(15));
+  };
+  window.rotateRight = function() {
+    if (!viewer) return;
+    viewer.camera.rotate(Cesium.Cartesian3.UNIT_Z, Cesium.Math.toRadians(-15));
+  };
+  window.inclinar = function() {
+    if (!viewer) return;
+    viewer.camera.rotate(Cesium.Cartesian3.UNIT_X, Cesium.Math.toRadians(-5));
+  };
   window.volverARobore = function () {
     if (!viewer) return;
-    viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(ROBORE.lon, ROBORE.lat, 8000),
-      orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-45), roll: 0 },
-      duration: 2
+    viewer.camera.setView({
+      destination: Cesium.Cartesian3.fromDegrees(ROBORE.lon, ROBORE.lat, 12000),
+      orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-50), roll: 0 }
     });
   };
 </script>
