@@ -49,6 +49,33 @@
       margin-top: 0.5rem; font-size: 12px;
     }
     button:hover { filter: brightness(1.1); }
+
+    /* Panel de detalle al hacer clic en un atractivo */
+    #detallePanel {
+      position: absolute; bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(13, 17, 23, 0.97);
+      border: 2px solid rgba(57, 255, 20, 0.5);
+      border-radius: 14px; padding: 1rem;
+      color: #E6EDF3; max-width: 420px; width: 90%;
+      font-size: 13px; z-index: 1002;
+      display: none; box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+    }
+    #detallePanel img {
+      width: 100%; max-height: 220px; object-fit: cover;
+      border-radius: 8px; margin-bottom: 0.6rem;
+    }
+    #detallePanel h3 {
+      color: #39FF14; margin: 0 0 0.4rem 0;
+      font-size: 1.1rem; font-family: 'Playfair Display', serif;
+    }
+    #detallePanel .cerrar {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(255,255,255,0.1); color: #fff;
+      border: none; width: 30px; height: 30px;
+      border-radius: 8px; cursor: pointer; font-size: 14px;
+      width: auto; padding: 0 8px; margin: 0;
+    }
   </style>
 </head>
 <body>
@@ -67,16 +94,24 @@
 <div id="infoPanel">
   <h3>🗺 Roboré 3D</h3>
   <p style="margin: 0 0 0.5rem 0; color: rgba(255,255,255,0.7); font-size: 12px;">
-    Puntos de atractivos turísticos de la Chiquitanía
+    Haz clic en las imágenes flotantes para ver el detalle
   </p>
   <button onclick="volverARobore()">📍 Centrar en Roboré</button>
+</div>
+
+<!-- Panel de detalle del atractivo -->
+<div id="detallePanel">
+  <button class="cerrar" onclick="cerrarDetalle()">✕</button>
+  <img id="detalleImg" src="" alt="">
+  <h3 id="detalleNombre"></h3>
+  <p id="detalleDesc" style="color: rgba(255,255,255,0.7); margin: 0; font-size: 12px;"></p>
 </div>
 
 <script>
   // Coordenadas de Roboré
   const ROBORE = { lon: -59.7583, lat: -18.3328 };
 
-  // Lista de atractivos turísticos (coordenadas aproximadas — verificar antes de uso oficial)
+  // Lista de atractivos turísticos (coordenadas aproximadas)
   const atractivos = [
     { nombre: 'Balneario Municipal El Chorro', lon: -59.7583, lat: -18.3328, tipo: 'turismo' },
     { nombre: 'Las Pampas', lon: -59.7700, lat: -18.3450, tipo: 'turismo' },
@@ -96,6 +131,27 @@
     chochis: '#FFD700',
     aguas: '#38BDF8'
   };
+
+  // Mapeo de nombre → archivo de imagen en tu repositorio
+  const mapaImagenes = {
+    'Balneario Municipal El Chorro': 'balneariomunicipal.jpeg',
+    'Las Pampas': 'laspampas.jpg',
+    'Las Pozas': 'laspozas.jpeg',
+    'Cuevas de Miserendino': 'cuevasdemiserendino.jpeg',
+    'El Chorro de San Luis': 'chorrosanluis.png',
+    'Los Totaizales': 'totaizales.jpg',
+    'Santuario Mariano de la Torre': 'santuariomariano.jpeg',
+    'Cascada de los Helechos': 'cascadahelechos.jpg',
+    'Cascada Velo de Novia': 'cascadavelodenovia.jpeg',
+    'Cascada de Yororoba': 'cascadadeyororoba.jpeg',
+    'Centro Turístico Los Hervores': 'loshervores.jpg'
+  };
+
+  // Función que devuelve la URL completa de la imagen
+  function obtenerImagenLugar(nombre) {
+    const baseUrl = 'https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/';
+    return baseUrl + (mapaImagenes[nombre] || 'balneariomunicipal.jpeg');
+  }
 
   let viewer;
 
@@ -121,44 +177,87 @@
       selectionIndicator: false,
     });
 
-    // Imagen satelital real vía Cesium ion (asset 2 = Bing Aerial), sin necesidad de key propia de Bing
+    // Imagen satelital real vía Cesium ion (asset 2 = Bing Aerial)
     try {
       const bingLayer = await Cesium.IonImageryProvider.fromAssetId(2);
       viewer.imageryLayers.addImageryProvider(bingLayer);
     } catch (e) {
-      console.warn('No se pudo cargar Bing Aerial desde Cesium ion, se usa la capa base por defecto.', e);
+      console.warn('No se pudo cargar Bing Aerial, se usa capa base por defecto.', e);
     }
 
-    // Añadir puntos de atractivos
+    // Añadir puntos de atractivos con imágenes flotantes
     atractivos.forEach(function (lugar) {
+      const imagenUrl = obtenerImagenLugar(lugar.nombre);
+
       viewer.entities.add({
         name: lugar.nombre,
-        position: Cesium.Cartesian3.fromDegrees(lugar.lon, lugar.lat, 50),
+        position: Cesium.Cartesian3.fromDegrees(lugar.lon, lugar.lat, 100),
+
+        // Punto de color
         point: {
-          pixelSize: 14,
+          pixelSize: 12,
           color: Cesium.Color.fromCssColorString(colores[lugar.tipo] || colores.turismo),
           outlineColor: Cesium.Color.WHITE,
           outlineWidth: 2,
           heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
         },
+
+        // Imagen flotante (billboard)
+        billboard: {
+          image: imagenUrl,
+          width: 100,
+          height: 70,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -10),
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 50000),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY
+        },
+
+        // Etiqueta con el nombre (oculta si hay billboard, se muestra al hacer zoom)
         label: {
           text: lugar.nombre,
-          font: '12px DM Sans, sans-serif',
+          font: '11px DM Sans, sans-serif',
           fillColor: Cesium.Color.WHITE,
           outlineColor: Cesium.Color.BLACK,
           outlineWidth: 2,
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          pixelOffset: new Cesium.Cartesian2(0, -25),
+          pixelOffset: new Cesium.Cartesian2(0, -90),
           heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 80000)
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 30000)
         }
       });
+
+      // Detectar clic en la imagen/punto para mostrar el panel de detalle
+      viewer.screenSpaceEventHandler.setInputAction(function (movement) {
+        const picked = viewer.scene.pick(movement.position);
+        if (Cesium.defined(picked) && picked.id && picked.id.name) {
+          const nombre = picked.id.name;
+          const lugarData = atractivos.find(a => a.nombre === nombre);
+          if (lugarData) {
+            mostrarDetalle(lugarData);
+          }
+        }
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     });
 
     volverARobore();
 
     document.getElementById('tokenPanel').style.display = 'none';
     document.getElementById('infoPanel').style.display = 'block';
+  }
+
+  // Mostrar panel de detalle
+  function mostrarDetalle(lugar) {
+    const panel = document.getElementById('detallePanel');
+    document.getElementById('detalleImg').src = obtenerImagenLugar(lugar.nombre);
+    document.getElementById('detalleNombre').textContent = lugar.nombre;
+    document.getElementById('detalleDesc').textContent = 'Lat: ' + lugar.lat.toFixed(4) + ' · Lon: ' + lugar.lon.toFixed(4);
+    panel.style.display = 'block';
+  }
+
+  function cerrarDetalle() {
+    document.getElementById('detallePanel').style.display = 'none';
   }
 
   window.volverARobore = function () {
