@@ -75,6 +75,18 @@
       border-radius: 8px; cursor: pointer; font-size: 14px;
       width: auto; padding: 0 8px; margin: 0;
     }
+
+    /* Botón "Cómo llegar" */
+    #detallePanel .btn-llegar {
+      display: block; width: 100%;
+      background: #4285F4; color: #fff;
+      border: none; padding: 10px;
+      border-radius: 8px; font-weight: 700;
+      cursor: pointer; font-size: 13px;
+      margin-top: 0.8rem; text-decoration: none;
+      text-align: center;
+    }
+    #detallePanel .btn-llegar:hover { background: #3367d6; }
   </style>
 </head>
 <body>
@@ -94,6 +106,9 @@
   <p style="margin: 0 0 0.5rem 0; color: rgba(255,255,255,0.7); font-size: 12px;">
     🟢 Turismo · 🔴 Hoteles · 🟣 Restaurantes
   </p>
+  <p style="margin: 0 0 0.5rem 0; color: rgba(255,255,255,0.5); font-size: 11px;">
+    🖱️ Arrastra para girar · Rueda para zoom
+  </p>
   <button onclick="volverARobore()">📍 Centrar en Roboré</button>
 </div>
 
@@ -102,6 +117,7 @@
   <img id="detalleImg" src="" alt="">
   <h3 id="detalleNombre"></h3>
   <p id="detalleDesc" style="color: rgba(255,255,255,0.85); margin: 0; font-size: 12px; white-space: pre-line;"></p>
+  <a id="btnComoLlegar" class="btn-llegar" href="#" target="_blank">🧭 Cómo llegar con Google Maps</a>
 </div>
 
 <script>
@@ -283,6 +299,8 @@
       navigationHelpButton: false,
       infoBox: false,
       selectionIndicator: false,
+      fullscreenButton: false,
+      vrButton: false,
     });
 
     try {
@@ -291,6 +309,16 @@
     } catch (e) {
       console.warn('No se pudo cargar Bing Aerial.', e);
     }
+
+    // ===== CONFIGURACIÓN DE CONTROLES DE CÁMARA =====
+    const controller = viewer.scene.screenSpaceCameraController;
+    controller.enableRotate = true;      // Rotar con clic izquierdo
+    controller.enableTranslate = true;   // Desplazar con clic derecho
+    controller.enableZoom = true;        // Zoom con rueda
+    controller.enableTilt = true;        // Inclinar con Ctrl + clic
+    controller.enableLook = true;        // Mirar libremente
+    controller.minimumZoomDistance = 100;   // No acercarse más de 100m
+    controller.maximumZoomDistance = 50000; // No alejarse más de 50km
 
     function agregarPunto(lugar, color, prefijo) {
       const imagenUrl = obtenerImagenLugar(lugar.nombre);
@@ -306,13 +334,14 @@
         },
         billboard: {
           image: imagenUrl,
-          width: 70,
-          height: 50,
+          width: 55,
+          height: 40,
           verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -10),
+          pixelOffset: new Cesium.Cartesian2(0, -5),
           heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 25000),
-          disableDepthTestDistance: Number.POSITIVE_INFINITY
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 20000),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          scaleByDistance: new Cesium.NearFarScalar(500, 1.0, 20000, 0.5)
         },
         label: {
           text: lugar.nombre,
@@ -321,9 +350,10 @@
           outlineColor: Cesium.Color.BLACK,
           outlineWidth: 2,
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          pixelOffset: new Cesium.Cartesian2(0, -75),
+          pixelOffset: new Cesium.Cartesian2(0, -65),
           heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 25000)
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 15000),
+          scaleByDistance: new Cesium.NearFarScalar(500, 1.0, 15000, 0.7)
         }
       });
     }
@@ -379,6 +409,11 @@
     }
     
     document.getElementById('detalleDesc').textContent = descripcion;
+    
+    // Configurar botón "Cómo llegar"
+    const btnLlegar = document.getElementById('btnComoLlegar');
+    btnLlegar.href = 'https://www.google.com/maps/dir/?api=1&destination=' + lugar.lat + ',' + lugar.lon;
+    
     panel.style.display = 'block';
   }
 
@@ -386,7 +421,6 @@
     document.getElementById('detallePanel').style.display = 'none';
   }
 
-  // ⚡ CORRECCIÓN: setView para ir directo a Roboré (sin vuelo animado)
   window.volverARobore = function () {
     if (!viewer) return;
     viewer.camera.setView({
