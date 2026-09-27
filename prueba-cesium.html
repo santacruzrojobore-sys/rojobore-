@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>Prueba Cesium - Rojobore</title>
+  <title>Panorama 360 - Rojobore</title>
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.145/Build/Cesium/Cesium.js"></script>
   <link href="https://cesium.com/downloads/cesiumjs/releases/1.145/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
   <style>
@@ -14,11 +14,12 @@
 <body>
   <div id="cesiumContainer"></div>
   <script>
-    // ⚠️ REEMPLAZA ESTO con tu token nuevo
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IkdmLVpsc0R2THpwX1ZOaXciLCJqdGkiOiI5MDgzMDc2Ni04MDVjLTQ1ZDQtYTI0NC1iMDliZWU4ZTFlZGEiLCJpZCI6NTA5NzQ0LCJzdWIiOiJjcmhpcyIsImlzcyI6Imh0dHBzOi8vYXBpLmNlc2l1bS5jb20iLCJhdWQiOiJjcmhpc19kZWZhdWx0IiwiaWF0IjoxNzkwNTMwOTA3fQ.o9kuxu96WvbdJqs4bpWUy0NpCMedKOS70Obxqo0fK58';
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IkdmLVpsc0R2THpwX1ZOaXciLCJqdGkiOiI5MDgzMDc2Ni04MDVjLTQ1ZDQtYTI0NC1iMDliZWU4ZTFlZGEiLCJpZCI6NTA5NzQ0LCJzdWIiOiJjcmhpcyIsImlzcyI6Imh0dHBzOi8vYXBpLmNlc2l1bS5jb20iLCJhdWQiOiJjcmhpc19kZWZhdWx0IiwiaWF0IjoxNzkwNTMwOTA3fQ.o9kuxu96WvbdJqs4bpWUy0NpCMedKOS70Obxqo0fK58'; // ← pon tu token
 
     const viewer = new Cesium.Viewer('cesiumContainer', {
-      terrain: Cesium.Terrain.fromWorldTerrain(),
+      globe: false,           // Ocultamos el globo para que no atraviese el panorama
+      skyBox: false,
+      skyAtmosphere: false,
       timeline: false,
       animation: false,
       baseLayerPicker: false,
@@ -29,10 +30,40 @@
       infoBox: false,
     });
 
-    // Volar hasta Roboré
-   viewer.camera.setView({
-  destination: Cesium.Cartesian3.fromDegrees(-59.7583, -18.3328, 15000)
-});
+    // Coordenadas de Roboré (Balneario Municipal como ejemplo)
+    const longitude = -59.7583;
+    const latitude = -18.3328;
+    const position = Cesium.Cartesian3.fromDegrees(longitude, latitude, 2);
+
+    // Imagen panorámica equirectangular 2:1 de prueba
+    const panoramaImage = 'https://raw.githubusercontent.com/cesium/cesium/main/Apps/SampleData/equirectangular_panorama.jpg';
+
+    // Matriz de transformación: coloca el panorama en la posición exacta
+    const hpr = new Cesium.HeadingPitchRoll(0, 0, 0);
+    const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+      position, hpr, Cesium.Ellipsoid.WGS84, Cesium.Transforms.eastNorthUpToFixedFrame
+    );
+
+    // Añadir el panorama a la escena
+    viewer.scene.primitives.add(new Cesium.EquirectangularPanorama({
+      transform: modelMatrix,
+      image: panoramaImage,
+    }));
+
+    // Poner la cámara DENTRO del panorama y bloquear el desplazamiento
+    viewer.scene.camera.lookAt(
+      position,
+      new Cesium.HeadingPitchRange(
+        Cesium.Math.toRadians(0),
+        Cesium.Math.toRadians(0),
+        0.01 // distancia mínima para que la cámara esté dentro
+      )
+    );
+
+    // Bloquear zoom y desplazamiento: solo se puede rotar
+    const controller = viewer.scene.screenSpaceCameraController;
+    controller.enableZoom = false;
+    controller.enableTranslate = false;
   </script>
 </body>
 </html>
