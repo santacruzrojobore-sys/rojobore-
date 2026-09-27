@@ -36,8 +36,7 @@
     const position = Cesium.Cartesian3.fromDegrees(longitude, latitude, 2);
 
     // Imagen panorámica equirectangular 2:1 de prueba
-    const panoramaImage = 'https://raw.githubusercontent.com/cesium/cesium/main/Apps/SampleData/equirectangular_panorama.jpg';
-
+const panoramaImage = 'https://upload.wikimedia.org/wikipedia/commons/0/08/Laon_Cathedral_Interior_360x180%2C_Picardy%2C_France_-_Diliff.jpg';
     // Matriz de transformación: coloca el panorama en la posición exacta
     const hpr = new Cesium.HeadingPitchRoll(0, 0, 0);
     const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
