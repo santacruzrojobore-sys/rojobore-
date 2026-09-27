@@ -75,8 +75,6 @@
       border-radius: 8px; cursor: pointer; font-size: 14px;
       width: auto; padding: 0 8px; margin: 0;
     }
-
-    /* Botón "Cómo llegar" */
     #detallePanel .btn-llegar {
       display: block; width: 100%;
       background: #4285F4; color: #fff;
@@ -88,11 +86,9 @@
     }
     #detallePanel .btn-llegar:hover { background: #3367d6; }
 
-    /* ===== BOTONES DE ZOOM PERSONALIZADOS ===== */
     #zoomControls {
       position: absolute; bottom: 30px; right: 20px;
-      z-index: 1000; display: flex; flex-direction: column;
-      gap: 6px;
+      z-index: 1000; display: flex; flex-direction: column; gap: 6px;
     }
     #zoomControls button {
       background: rgba(13, 17, 23, 0.95);
@@ -104,17 +100,12 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.5);
       transition: 0.15s; padding: 0;
     }
-    #zoomControls button:hover {
-      background: rgba(57, 255, 20, 0.15);
-      transform: scale(1.08);
-    }
+    #zoomControls button:hover { background: rgba(57, 255, 20, 0.15); transform: scale(1.08); }
     #zoomControls button:active { transform: scale(0.95); }
 
-    /* ===== BOTONES DE GIRO (opcional) ===== */
     #rotateControls {
       position: absolute; bottom: 30px; right: 80px;
-      z-index: 1000; display: flex; flex-direction: column;
-      gap: 6px;
+      z-index: 1000; display: flex; flex-direction: column; gap: 6px;
     }
     #rotateControls button {
       background: rgba(13, 17, 23, 0.95);
@@ -126,10 +117,7 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.5);
       transition: 0.15s; padding: 0;
     }
-    #rotateControls button:hover {
-      background: rgba(57, 255, 20, 0.15);
-      transform: scale(1.08);
-    }
+    #rotateControls button:hover { background: rgba(57, 255, 20, 0.15); transform: scale(1.08); }
     #rotateControls button:active { transform: scale(0.95); }
   </style>
 </head>
@@ -164,13 +152,11 @@
   <a id="btnComoLlegar" class="btn-llegar" href="#" target="_blank">🧭 Cómo llegar con Google Maps</a>
 </div>
 
-<!-- ===== BOTONES DE ZOOM ===== -->
 <div id="zoomControls">
   <button onclick="zoomIn()" title="Acercar">+</button>
   <button onclick="zoomOut()" title="Alejar">−</button>
 </div>
 
-<!-- ===== BOTONES DE GIRO ===== -->
 <div id="rotateControls">
   <button onclick="rotateLeft()" title="Girar a la izquierda">↺</button>
   <button onclick="rotateRight()" title="Girar a la derecha">↻</button>
@@ -180,7 +166,6 @@
 <script>
   const ROBORE = { lon: -59.7583, lat: -18.3328 };
 
-  // ==================== ATRACTIVOS TURÍSTICOS ====================
   const atractivos = [
     { nombre: 'Balneario Municipal El Chorro', lon: -59.7583, lat: -18.3328, tipo: 'turismo',
       precioLocal: 10, precioExtranjero: 20, horario: '08:00-18:00', rating: 4.5,
@@ -239,7 +224,6 @@
       servicios: 'Baños, vestidores, piscinas', recomendacion: 'Llevar traje de baño y toalla' }
   ];
 
-  // ==================== HOTELES ====================
   const hoteles = [
     { nombre: 'Hotel Las Lajas', lon: -59.7580, lat: -18.3330, tipo: 'hotel', precio: 200, rating: 4.3, servicios: 'Piscina, restaurante, estacionamiento' },
     { nombre: 'Hotel Descanso Chiquitano', lon: -59.7570, lat: -18.3340, tipo: 'hotel', precio: 150, rating: 4.0, servicios: 'Jardín, comedor' },
@@ -256,7 +240,6 @@
     { nombre: 'Hotel Pacheco', lon: -59.7580, lat: -18.3345, tipo: 'hotel', precio: 160, rating: 3.9, servicios: 'Aire acondicionado, TV' }
   ];
 
-  // ==================== RESTAURANTES ====================
   const restaurantes = [
     { nombre: 'Restaurant El Molino', lon: -59.7570, lat: -18.3330, tipo: 'restaurante', precio: 60, especialidad: 'Carnes a la parrilla', horario: '07:00-22:00', rating: 4.3 },
     { nombre: 'Café París', lon: -59.7580, lat: -18.3320, tipo: 'restaurante', precio: 45, especialidad: 'Café de especialidad y repostería', horario: '07:30-21:00', rating: 4.2 },
@@ -334,40 +317,63 @@
     return baseUrl + ruta;
   }
 
+  // ===== PASO 1: generador de pin con efecto glow (SVG en memoria, sin archivos externos) =====
+  function crearPinGlowSVG(colorHex) {
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="90" height="110" viewBox="0 0 90 110">
+        <defs>
+          <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="5" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <radialGradient id="ring" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="${colorHex}" stop-opacity="0.55"/>
+            <stop offset="100%" stop-color="${colorHex}" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="45" cy="88" r="26" fill="url(#ring)"/>
+        <ellipse cx="45" cy="90" rx="10" ry="3" fill="rgba(0,0,0,0.35)"/>
+        <g filter="url(#glow)">
+          <path d="M45 8 C24 8 10 24 10 43 C10 66 45 96 45 96 C45 96 80 66 80 43 C80 24 66 8 45 8 Z"
+                fill="${colorHex}" stroke="white" stroke-width="2.5"/>
+          <circle cx="45" cy="42" r="15" fill="#0D1117"/>
+          <circle cx="45" cy="42" r="9" fill="${colorHex}"/>
+        </g>
+      </svg>`;
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+  }
+
+  // Cachear un pin por color para no regenerar el SVG por cada punto
+  const cachePines = {};
+  function pinPara(colorHex) {
+    if (!cachePines[colorHex]) cachePines[colorHex] = crearPinGlowSVG(colorHex);
+    return cachePines[colorHex];
+  }
+
   let viewer;
 
   async function iniciarVisor() {
     const token = document.getElementById('tokenInput').value.trim();
-    if (!token) {
-      alert('Por favor pega tu token de Cesium ion primero.');
-      return;
-    }
+    if (!token) { alert('Por favor pega tu token de Cesium ion primero.'); return; }
 
     Cesium.Ion.defaultAccessToken = token;
 
     viewer = new Cesium.Viewer('cesiumContainer', {
       terrain: Cesium.Terrain.fromWorldTerrain(),
-      timeline: false,
-      animation: false,
-      baseLayerPicker: false,
-      geocoder: false,
-      homeButton: false,
-      sceneModePicker: false,
-      navigationHelpButton: false,
-      infoBox: false,
-      selectionIndicator: false,
-      fullscreenButton: false,
-      vrButton: false,
+      timeline: false, animation: false, baseLayerPicker: false,
+      geocoder: false, homeButton: false, sceneModePicker: false,
+      navigationHelpButton: false, infoBox: false, selectionIndicator: false,
+      fullscreenButton: false, vrButton: false,
     });
 
     try {
       const bingLayer = await Cesium.IonImageryProvider.fromAssetId(2);
       viewer.imageryLayers.addImageryProvider(bingLayer);
-    } catch (e) {
-      console.warn('No se pudo cargar Bing Aerial.', e);
-    }
+    } catch (e) { console.warn('No se pudo cargar Bing Aerial.', e); }
 
-    // ===== CONFIGURACIÓN DE CONTROLES DE CÁMARA =====
     const controller = viewer.scene.screenSpaceCameraController;
     controller.enableRotate = true;
     controller.enableTranslate = true;
@@ -377,29 +383,24 @@
     controller.minimumZoomDistance = 100;
     controller.maximumZoomDistance = 50000;
 
-    function agregarPunto(lugar, color, prefijo) {
+    // ===== PASO 2 y 3: pin glow siempre visible + foto solo al acercarse =====
+    function agregarPunto(lugar, colorHex, prefijo) {
       const imagenUrl = obtenerImagenLugar(lugar.nombre);
       viewer.entities.add({
         name: prefijo + lugar.nombre,
         position: Cesium.Cartesian3.fromDegrees(lugar.lon, lugar.lat, 100),
-        point: {
-          pixelSize: 12,
-          color: Cesium.Color.fromCssColorString(color),
-          outlineColor: Cesium.Color.WHITE,
-          outlineWidth: 2,
-          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
-        },
+
+        // Pin glow: visible siempre, se ve nítido a cualquier distancia razonable
         billboard: {
-          image: imagenUrl,
-          width: 55,
-          height: 40,
+          image: pinPara(colorHex),
+          width: 46,
+          height: 56,
           verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -5),
           heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 20000),
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          scaleByDistance: new Cesium.NearFarScalar(500, 1.0, 20000, 0.5)
+          scaleByDistance: new Cesium.NearFarScalar(300, 1.1, 20000, 0.55)
         },
+
         label: {
           text: lugar.nombre,
           font: '11px DM Sans, sans-serif',
@@ -407,10 +408,26 @@
           outlineColor: Cesium.Color.BLACK,
           outlineWidth: 2,
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          pixelOffset: new Cesium.Cartesian2(0, -65),
+          pixelOffset: new Cesium.Cartesian2(0, -62),
           heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
           distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 15000),
           scaleByDistance: new Cesium.NearFarScalar(500, 1.0, 15000, 0.7)
+        }
+      });
+
+      // Entidad adicional: foto flotante, solo visible de cerca (menos de 2.5km)
+      viewer.entities.add({
+        name: prefijo + lugar.nombre,
+        position: Cesium.Cartesian3.fromDegrees(lugar.lon, lugar.lat, 100),
+        billboard: {
+          image: imagenUrl,
+          width: 60,
+          height: 42,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -66),
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2500),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY
         }
       });
     }
@@ -424,12 +441,12 @@
       if (Cesium.defined(picked) && picked.id && picked.id.name) {
         const nombreConPrefijo = picked.id.name;
         const nombre = nombreConPrefijo.replace('📍 ', '').replace('🏨 ', '').replace('🍽️ ', '');
-        
+
         let lugarData = atractivos.find(a => a.nombre === nombre);
         let categoria = 'turismo';
         if (!lugarData) { lugarData = hoteles.find(h => h.nombre === nombre); categoria = 'hotel'; }
         if (!lugarData) { lugarData = restaurantes.find(r => r.nombre === nombre); categoria = 'restaurante'; }
-        
+
         if (lugarData) mostrarDetalle(lugarData, categoria);
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -443,9 +460,8 @@
     const panel = document.getElementById('detallePanel');
     document.getElementById('detalleImg').src = obtenerImagenLugar(lugar.nombre);
     document.getElementById('detalleNombre').textContent = lugar.nombre;
-    
+
     let descripcion = '';
-    
     if (categoria === 'hotel') {
       descripcion = '🏨 Hotel · Bs ' + lugar.precio + '/noche · ★ ' + lugar.rating + '\n\n' +
                     '🛎️ Servicios: ' + lugar.servicios;
@@ -464,12 +480,10 @@
                     '🛎️ Servicios: ' + lugar.servicios + '\n' +
                     '💡 Recomendación: ' + lugar.recomendacion;
     }
-    
+
     document.getElementById('detalleDesc').textContent = descripcion;
-    
     const btnLlegar = document.getElementById('btnComoLlegar');
     btnLlegar.href = 'https://www.google.com/maps/dir/?api=1&destination=' + lugar.lat + ',' + lugar.lon;
-    
     panel.style.display = 'block';
   }
 
@@ -477,46 +491,35 @@
     document.getElementById('detallePanel').style.display = 'none';
   }
 
-  // ==================== FUNCIONES DE LOS BOTONES DE ZOOM ====================
   window.zoomIn = function() {
     if (!viewer) return;
     const alturaActual = viewer.camera.positionCartographic.height;
     const nuevaAltura = Math.max(alturaActual / 1.5, 100);
     viewer.camera.zoomIn(alturaActual - nuevaAltura);
   };
-
   window.zoomOut = function() {
     if (!viewer) return;
     const alturaActual = viewer.camera.positionCartographic.height;
     const nuevaAltura = Math.min(alturaActual * 1.5, 50000);
     viewer.camera.zoomOut(nuevaAltura - alturaActual);
   };
-
-  // ==================== FUNCIONES DE LOS BOTONES DE GIRO ====================
   window.rotateLeft = function() {
     if (!viewer) return;
     viewer.camera.rotate(Cesium.Cartesian3.UNIT_Z, Cesium.Math.toRadians(15));
   };
-
   window.rotateRight = function() {
     if (!viewer) return;
     viewer.camera.rotate(Cesium.Cartesian3.UNIT_Z, Cesium.Math.toRadians(-15));
   };
-
   window.inclinar = function() {
     if (!viewer) return;
     viewer.camera.rotate(Cesium.Cartesian3.UNIT_X, Cesium.Math.toRadians(-5));
   };
-
   window.volverARobore = function () {
     if (!viewer) return;
     viewer.camera.setView({
       destination: Cesium.Cartesian3.fromDegrees(ROBORE.lon, ROBORE.lat, 12000),
-      orientation: {
-        heading: Cesium.Math.toRadians(0),
-        pitch: Cesium.Math.toRadians(-50),
-        roll: 0
-      }
+      orientation: { heading: Cesium.Math.toRadians(0), pitch: Cesium.Math.toRadians(-50), roll: 0 }
     });
   };
 </script>
