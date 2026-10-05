@@ -22,7 +22,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<!-- CesiumJS -->
 <script src="https://cesium.com/downloads/cesiumjs/releases/1.115/Build/Cesium/Cesium.js"></script>
 <link href="https://cesium.com/downloads/cesiumjs/releases/1.115/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
 <style>
@@ -63,21 +62,53 @@
     width:var(--sidebar-w);
     background:rgba(8,6,16,0.97);
     backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
     z-index:2000;
     display:flex; flex-direction:column; align-items:center;
     padding:1rem 0; gap:0;
     transition:width 0.3s cubic-bezier(.4,0,.2,1);
     overflow:hidden;
     border-right:1px solid rgba(192,132,252,0.25);
+    isolation:isolate;
   }
   .sidebar.open { width:var(--sidebar-w-open); align-items:flex-start; }
 
-  /* El canvas #sbFx (cascada) se inserta por JS y hereda position absolute inset 0 z-index 0 */
-
-  /* Luciérnagas doradas esmeralda + meteoritos lila sutil sobre la cascada */
-  .sb-extra {
-    position:absolute; inset:0; pointer-events:none; z-index:0; overflow:hidden;
+  /* Capa 0: FOTO de la cascada como background del sidebar (URL CORREGIDA) */
+  .sidebar::before {
+    content:'';
+    position:absolute; inset:0;
+    background-image:url('https://raw.githubusercontent.com/santacruzrojobore-sys/rojobore-/main/barra_lateral_hd.jpg');
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    z-index:0;
+    pointer-events:none;
   }
+
+  /* Capa 1: canvas del efecto cascada animado */
+  #sbFx {
+    position:absolute; inset:0; width:100%; height:100%;
+    z-index:1; pointer-events:none; display:block;
+  }
+
+  /* Capa 2: estrellas, luciérnagas, meteoritos */
+  .sb-extra {
+    position:absolute; inset:0; pointer-events:none; z-index:2; overflow:hidden;
+  }
+  /* Capa 3: velo suave */
+  .sb-veil {
+    position:absolute; inset:0; z-index:3; pointer-events:none;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(0,10,8,0.3) 0%, rgba(0,5,10,0.5) 60%, rgba(0,0,0,0.7) 100%);
+  }
+  /* Los items, logo, toggle van por encima */
+  .sidebar > .sidebar-logo,
+  .sidebar > .sidebar-toggle,
+  .sidebar > .sidebar-nav,
+  .sidebar > .sidebar-bottom {
+    position:relative; z-index:5;
+  }
+
   .sb-star {
     position:absolute; width:2px; height:2px; border-radius:50%;
     background:#fff; box-shadow:0 0 6px #fff, 0 0 12px #c084fc;
@@ -116,19 +147,12 @@
     100% { transform: translate(280px,280px) rotate(35deg); opacity:0; }
   }
 
-  /* Overlay sutil sobre la cascada para que los items se lean */
-  .sb-veil {
-    position:absolute; inset:0; z-index:0; pointer-events:none;
-    background:
-      radial-gradient(ellipse at 50% 0%, rgba(0,10,8,0.35) 0%, rgba(0,5,10,0.55) 60%, rgba(0,0,0,0.7) 100%);
-  }
-
   .sidebar-logo {
     font-family:var(--font-display); font-size:1.1rem;
     color:var(--neon); font-weight:900; letter-spacing:0.03em;
     white-space:nowrap; padding:0.4rem 0 1.2rem; width:100%;
-    text-align:center; overflow:hidden; position:relative; z-index:2;
-    text-shadow: 0 0 14px rgba(0,0,0,.9), 0 0 20px rgba(57,255,20,0.7);
+    text-align:center; overflow:hidden;
+    text-shadow: 0 0 14px rgba(0,0,0,.95), 0 0 20px rgba(57,255,20,0.7);
   }
   .sidebar.open .sidebar-logo { padding-left:1.2rem; text-align:left; font-size:1.3rem; }
   .sidebar-toggle {
@@ -137,29 +161,30 @@
     border:1px solid rgba(192,132,252,0.4);
     border-radius:10px; color:var(--lila); font-size:1rem;
     cursor:pointer; display:flex; align-items:center; justify-content:center;
-    margin-bottom:1rem; flex-shrink:0; transition:background 0.2s; position:relative; z-index:2;
+    margin-bottom:1rem; flex-shrink:0; transition:background 0.2s;
   }
   .sidebar-toggle:hover { background:rgba(192,132,252,0.3); box-shadow:0 0 20px rgba(192,132,252,0.5); }
   .sidebar.open .sidebar-toggle { margin-left:1rem; }
-  .sidebar-nav { flex:1; width:100%; display:flex; flex-direction:column; gap:0.3rem; padding:0 0.5rem; position:relative; z-index:2; }
+  .sidebar-nav { flex:1; width:100%; display:flex; flex-direction:column; gap:0.3rem; padding:0 0.5rem; }
   .sidebar-item {
     display:flex; align-items:center; gap:0.8rem;
     padding:0.75rem 0.75rem; border-radius:12px; cursor:pointer;
-    color:rgba(255,255,255,0.6); font-size:0.82rem; font-weight:500;
+    color:rgba(255,255,255,0.7); font-size:0.82rem; font-weight:500;
     transition:all 0.2s; white-space:nowrap; border:1px solid transparent;
-    background:rgba(4,18,20,0.45);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    background:rgba(4,18,20,0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
   }
-  .sidebar-item:hover { background:rgba(192,132,252,0.2); color:#fff; border-color:rgba(192,132,252,0.4); box-shadow:0 0 15px rgba(192,132,252,0.25); }
-  .sidebar-item.active { background:rgba(57,255,20,0.18); color:var(--neon); border-color:rgba(57,255,20,0.5); box-shadow:0 0 18px rgba(57,255,20,0.25); }
+  .sidebar-item:hover { background:rgba(192,132,252,0.22); color:#fff; border-color:rgba(192,132,252,0.4); box-shadow:0 0 15px rgba(192,132,252,0.25); }
+  .sidebar-item.active { background:rgba(57,255,20,0.2); color:var(--neon); border-color:rgba(57,255,20,0.5); box-shadow:0 0 18px rgba(57,255,20,0.3); }
   .sidebar-item.active .sidebar-icon { filter: drop-shadow(0 0 6px var(--neon)); }
   .sidebar-icon { font-size:1.1rem; flex-shrink:0; width:24px; text-align:center; }
   .sidebar-label { opacity:0; transition:opacity 0.2s; pointer-events:none; }
   .sidebar.open .sidebar-label { opacity:1; }
-  .sidebar-bottom { width:100%; padding:0.5rem; border-top:1px solid rgba(192,132,252,0.18); position:relative; z-index:2; }
+  .sidebar-bottom { width:100%; padding:0.5rem; border-top:1px solid rgba(192,132,252,0.18); }
   .sidebar-plan-btn {
-    background:linear-gradient(135deg, rgba(57,255,20,0.22) 0%, rgba(192,132,252,0.22) 100%) !important;
+    background:linear-gradient(135deg, rgba(57,255,20,0.28) 0%, rgba(192,132,252,0.28) 100%) !important;
     border-color:rgba(192,132,252,0.5) !important;
     color:var(--lila) !important;
     font-weight:700 !important;
@@ -367,7 +392,6 @@
   #section-mapa { position:absolute; inset:0; display:none; flex-direction:column; }
   #cesiumContainer { flex:1; position:relative; width:100%; }
 
-  /* Cesium overrides */
   .cesium-viewer, .cesium-widget, .cesium-widget canvas { border-radius: 0 !important; }
   .cesium-viewer-bottom, .cesium-viewer-animationContainer, .cesium-viewer-timelineContainer,
   .cesium-viewer-toolbar, .cesium-viewer-fullscreenContainer { display: none !important; }
@@ -377,7 +401,6 @@
   .cesium-selection-wrapper svg { fill: #39FF14 !important; }
   .cesium-navigation-help { background: rgba(8,12,24,0.9) !important; color: #E6EDF3 !important; }
 
-  /* ===== FX CANVAS GLOBAL ===== */
   #particleCanvas, #auroraCanvasWrap {
     position: fixed;
     inset: 0;
@@ -396,7 +419,6 @@
   .sidebar { z-index: 2000; }
   .app-main { z-index: 4; }
 
-  /* ===== BOOKING MODAL ===== */
   .booking-modal { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:4500; display:flex; align-items:center; justify-content:center; }
   .booking-modal.hidden { display:none; }
   .booking-card { background:var(--card2); border-radius:20px; width:93%; max-width:520px; max-height:92vh; overflow-y:auto; box-shadow:0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(57,255,20,0.15); animation:fadeInUp 0.45s ease; }
@@ -464,11 +486,10 @@
 
 <div id="toast" class="toast"></div>
 
-<!-- ===== FX CANVAS (detrás del contenido) ===== -->
 <canvas id="particleCanvas"></canvas>
 <div id="auroraCanvasWrap"></div>
 
-<!-- ===== ROULETTE ===== -->
+<!-- ROULETTE -->
 <div class="roulette-overlay hidden" id="rouletteOverlay">
   <div class="roulette-title">GENERANDO RUTA SORPRESA</div>
   <div class="roulette-items">
@@ -480,7 +501,7 @@
   <div id="rou-status" style="color:var(--text-soft);font-size:0.8rem;"></div>
 </div>
 
-<!-- ===== CHOICE MODAL ===== -->
+<!-- CHOICE MODAL -->
 <div class="choice-modal hidden" id="choiceModal">
   <div class="choice-card">
     <h3>Planificar mi viaje</h3>
@@ -492,7 +513,7 @@
   </div>
 </div>
 
-<!-- ===== PLAN MODAL ===== -->
+<!-- PLAN MODAL -->
 <div class="modal-overlay hidden" id="planModal">
   <div class="modal-sheet">
     <button class="modal-close" onclick="closeModals()">✕</button>
@@ -518,7 +539,7 @@
   </div>
 </div>
 
-<!-- ===== CALC MANUAL MODAL ===== -->
+<!-- CALC MANUAL MODAL -->
 <div class="modal-overlay hidden" id="calcModal">
   <div class="modal-sheet">
     <button class="modal-close" onclick="closeModals()">✕</button>
@@ -544,7 +565,7 @@
   </div>
 </div>
 
-<!-- ===== SORPRESA MODAL ===== -->
+<!-- SORPRESA MODAL -->
 <div class="modal-overlay hidden" id="surpriseModal">
   <div class="modal-sheet">
     <button class="modal-close" onclick="closeModals()">✕</button>
@@ -553,7 +574,7 @@
   </div>
 </div>
 
-<!-- ===== BOOKING MODAL ===== -->
+<!-- BOOKING MODAL -->
 <div class="booking-modal hidden" id="bookingModal">
   <div class="booking-card">
     <div class="booking-header">
@@ -586,14 +607,8 @@
         <div class="booking-section">
           <div class="booking-section-title">¿Cuándo y cuántas personas?</div>
           <div class="booking-date-row" style="margin-bottom:0.5rem;">
-            <div>
-              <label style="font-size:0.72rem;color:var(--text-soft);display:block;margin-bottom:3px;">Fecha de visita</label>
-              <input type="date" id="bookingDate" min="">
-            </div>
-            <div>
-              <label style="font-size:0.72rem;color:var(--text-soft);display:block;margin-bottom:3px;">Personas</label>
-              <input type="number" id="bookingPersonas" value="2" min="1" max="20">
-            </div>
+            <div><label style="font-size:0.72rem;color:var(--text-soft);display:block;margin-bottom:3px;">Fecha de visita</label><input type="date" id="bookingDate" min=""></div>
+            <div><label style="font-size:0.72rem;color:var(--text-soft);display:block;margin-bottom:3px;">Personas</label><input type="number" id="bookingPersonas" value="2" min="1" max="20"></div>
           </div>
           <div id="bookingTipoVisitante" style="display:block;">
             <div style="font-size:0.72rem;color:var(--text-soft);margin-top:0.5rem;">Tipo de visitante (solo para lugares turísticos):</div>
@@ -608,18 +623,9 @@
       <div id="bpage3" style="display:none;">
         <div class="booking-section">
           <div class="booking-section-title">Tus datos de contacto</div>
-          <div class="hero-input-group" style="margin-bottom:0.5rem;position:relative;">
-            <span class="hero-input-icon" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);">👤</span>
-            <input class="hero-input" type="text" id="bookingNombre" placeholder="Nombre completo" required style="background:var(--bg2);border-color:var(--border);padding-left:2.5rem;">
-          </div>
-          <div class="hero-input-group" style="margin-bottom:0.5rem;position:relative;">
-            <span class="hero-input-icon" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);">📱</span>
-            <input class="hero-input" type="tel" id="bookingTel" placeholder="WhatsApp" required style="background:var(--bg2);border-color:var(--border);padding-left:2.5rem;">
-          </div>
-          <div class="hero-input-group" style="position:relative;">
-            <span class="hero-input-icon" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);">📧</span>
-            <input class="hero-input" type="email" id="bookingEmail" placeholder="Correo electrónico" required style="background:var(--bg2);border-color:var(--border);padding-left:2.5rem;">
-          </div>
+          <div class="hero-input-group" style="margin-bottom:0.5rem;position:relative;"><span class="hero-input-icon" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);">👤</span><input class="hero-input" type="text" id="bookingNombre" placeholder="Nombre completo" required style="background:var(--bg2);border-color:var(--border);padding-left:2.5rem;"></div>
+          <div class="hero-input-group" style="margin-bottom:0.5rem;position:relative;"><span class="hero-input-icon" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);">📱</span><input class="hero-input" type="tel" id="bookingTel" placeholder="WhatsApp" required style="background:var(--bg2);border-color:var(--border);padding-left:2.5rem;"></div>
+          <div class="hero-input-group" style="position:relative;"><span class="hero-input-icon" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);">📧</span><input class="hero-input" type="email" id="bookingEmail" placeholder="Correo electrónico" required style="background:var(--bg2);border-color:var(--border);padding-left:2.5rem;"></div>
           <textarea id="bookingNota" placeholder="Nota especial (opcional)..." style="margin-top:0.5rem;min-height:60px;background:var(--bg2);border-color:var(--border);color:var(--text);border-radius:8px;padding:0.6rem;font-size:0.8rem;font-family:var(--font);resize:vertical;"></textarea>
         </div>
       </div>
@@ -627,10 +633,7 @@
         <div class="ticket-wrap" id="ticketWrap">
           <div class="ticket-header">
             <span class="ticket-logo">🗺 Rojobore</span>
-            <div style="text-align:right;">
-              <div class="ticket-id">TICKET DE RESERVA</div>
-              <div id="ticketId" style="font-size:0.8rem;font-weight:900;color:#0D1117;"></div>
-            </div>
+            <div style="text-align:right;"><div class="ticket-id">TICKET DE RESERVA</div><div id="ticketId" style="font-size:0.8rem;font-weight:900;color:#0D1117;"></div></div>
           </div>
           <div class="ticket-body">
             <div class="ticket-row"><span class="ticket-label">Tipo</span><span class="ticket-val" id="tk-tipo-servicio">-</span></div>
@@ -643,14 +646,8 @@
             <div class="ticket-row"><span class="ticket-label">Nombre</span><span class="ticket-val" id="tk-nombre">-</span></div>
             <div class="ticket-row"><span class="ticket-label">Contacto</span><span class="ticket-val" id="tk-contacto">-</span></div>
             <div id="tk-nota-row" class="ticket-row" style="display:none;"><span class="ticket-label">Nota</span><span class="ticket-val" id="tk-nota">-</span></div>
-            <div class="ticket-total-row">
-              <span class="ticket-total-label">TOTAL ESTIMADO</span>
-              <span class="ticket-total-val" id="tk-total">Bs 0</span>
-            </div>
-            <div class="ticket-qr-area">
-              <div class="ticket-qr-box"><span id="ticketQR">QR<br>Válido<br>72h</span></div>
-              <div class="ticket-qr-text">Este ticket es una reserva simulada.<br>Preséntalo al operador local.<br>Válido 72 horas.</div>
-            </div>
+            <div class="ticket-total-row"><span class="ticket-total-label">TOTAL ESTIMADO</span><span class="ticket-total-val" id="tk-total">Bs 0</span></div>
+            <div class="ticket-qr-area"><div class="ticket-qr-box"><span id="ticketQR">QR<br>Válido<br>72h</span></div><div class="ticket-qr-text">Este ticket es una reserva simulada.<br>Preséntalo al operador local.<br>Válido 72 horas.</div></div>
           </div>
         </div>
         <div class="ticket-actions">
@@ -667,25 +664,19 @@
   </div>
 </div>
 
-<!-- ===== TICKET PLAN ===== -->
+<!-- TICKET PLAN -->
 <div class="booking-modal hidden" id="planTicketModal">
   <div class="booking-card">
     <div class="booking-header" style="background:linear-gradient(135deg, #1a2a0d, #2a4a18);">
       <span style="font-size:1.4rem;">📋</span>
-      <div style="flex:1;">
-        <div style="font-family:var(--font-display);color:var(--gold);font-size:1.05rem;font-weight:700;">Resumen de tu plan</div>
-        <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:2px;">Todos los ítems en un solo ticket</div>
-      </div>
+      <div style="flex:1;"><div style="font-family:var(--font-display);color:var(--gold);font-size:1.05rem;font-weight:700;">Resumen de tu plan</div><div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:2px;">Todos los ítems en un solo ticket</div></div>
       <button onclick="closePlanTicket()" style="background:rgba(255,255,255,0.08);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;">✕</button>
     </div>
     <div class="booking-body">
       <div class="ticket-wrap plan-ticket-wrap" id="planTicketWrap">
         <div class="ticket-header">
           <span class="ticket-logo">🗺 Rojobore</span>
-          <div style="text-align:right;">
-            <div class="plan-ticket-id">RESERVA DE PLAN</div>
-            <div id="planTicketId" style="font-size:0.8rem;font-weight:900;color:#fff;"></div>
-          </div>
+          <div style="text-align:right;"><div class="plan-ticket-id">RESERVA DE PLAN</div><div id="planTicketId" style="font-size:0.8rem;font-weight:900;color:#fff;"></div></div>
         </div>
         <div class="ticket-body" id="planTicketBody"></div>
         <div class="ticket-actions">
@@ -698,47 +689,27 @@
   </div>
 </div>
 
-<!-- ===== SIDEBAR ===== -->
+<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
-  <div class="sb-veil"></div>
+  <canvas id="sbFx"></canvas>
   <div class="sb-extra" id="sbExtra"></div>
+  <div class="sb-veil"></div>
   <div class="sidebar-logo">R</div>
   <button class="sidebar-toggle" onclick="toggleSidebar()" title="Menú">☰</button>
   <nav class="sidebar-nav">
-    <div class="sidebar-item active" onclick="showSection('hero')" id="nav-hero">
-      <span class="sidebar-icon">⌂</span>
-      <span class="sidebar-label">Inicio</span>
-    </div>
-    <div class="sidebar-item" onclick="showSection('turismo')" id="nav-turismo">
-      <span class="sidebar-icon" style="color:var(--c-turismo);">◈</span>
-      <span class="sidebar-label">Turismo</span>
-    </div>
-    <div class="sidebar-item" onclick="showSection('hoteles')" id="nav-hoteles">
-      <span class="sidebar-icon" style="color:var(--c-hoteles);">◈</span>
-      <span class="sidebar-label">Hoteles</span>
-    </div>
-    <div class="sidebar-item" onclick="showSection('restaurantes')" id="nav-restaurantes">
-      <span class="sidebar-icon" style="color:var(--c-restaurantes);">◈</span>
-      <span class="sidebar-label">Restaurantes</span>
-    </div>
-    <div class="sidebar-item" onclick="showSection('transporte')" id="nav-transporte">
-      <span class="sidebar-icon" style="color:var(--c-transporte);">◈</span>
-      <span class="sidebar-label">Transporte</span>
-    </div>
-    <div class="sidebar-item" onclick="showSection('mapa')" id="nav-mapa">
-      <span class="sidebar-icon">⊕</span>
-      <span class="sidebar-label">Mapa</span>
-    </div>
+    <div class="sidebar-item active" onclick="showSection('hero')" id="nav-hero"><span class="sidebar-icon">⌂</span><span class="sidebar-label">Inicio</span></div>
+    <div class="sidebar-item" onclick="showSection('turismo')" id="nav-turismo"><span class="sidebar-icon" style="color:var(--c-turismo);">◈</span><span class="sidebar-label">Turismo</span></div>
+    <div class="sidebar-item" onclick="showSection('hoteles')" id="nav-hoteles"><span class="sidebar-icon" style="color:var(--c-hoteles);">◈</span><span class="sidebar-label">Hoteles</span></div>
+    <div class="sidebar-item" onclick="showSection('restaurantes')" id="nav-restaurantes"><span class="sidebar-icon" style="color:var(--c-restaurantes);">◈</span><span class="sidebar-label">Restaurantes</span></div>
+    <div class="sidebar-item" onclick="showSection('transporte')" id="nav-transporte"><span class="sidebar-icon" style="color:var(--c-transporte);">◈</span><span class="sidebar-label">Transporte</span></div>
+    <div class="sidebar-item" onclick="showSection('mapa')" id="nav-mapa"><span class="sidebar-icon">⊕</span><span class="sidebar-label">Mapa</span></div>
   </nav>
   <div class="sidebar-bottom">
-    <div class="sidebar-item sidebar-plan-btn" onclick="openChoiceModalSafe()">
-      <span class="sidebar-icon">✦</span>
-      <span class="sidebar-label">Planificar viaje</span>
-    </div>
+    <div class="sidebar-item sidebar-plan-btn" onclick="openChoiceModalSafe()"><span class="sidebar-icon">✦</span><span class="sidebar-label">Planificar viaje</span></div>
   </div>
 </div>
 
-<!-- ===== MAIN ===== -->
+<!-- MAIN -->
 <div class="app-main" id="appMain">
   <div id="section-hero" style="position:absolute;inset:0;transition:opacity 0.3s;">
     <div class="hero-full">
@@ -772,10 +743,7 @@
   <div id="detailDrawer">
     <div id="drawerHeader" style="padding:1rem 1.2rem;display:flex;align-items:center;gap:0.8rem;flex-shrink:0;">
       <div id="drawerImgThumb" style="width:48px;height:48px;border-radius:10px;background-size:cover;background-position:center;flex-shrink:0;border:2px solid rgba(255,255,255,0.15);"></div>
-      <div style="flex:1;min-width:0;">
-        <div id="drawerTitle" style="color:#fff;font-family:var(--font-display);font-size:1rem;font-weight:700;line-height:1.2;"></div>
-        <div id="drawerSub" style="color:rgba(255,255,255,0.55);font-size:0.72rem;margin-top:2px;"></div>
-      </div>
+      <div style="flex:1;min-width:0;"><div id="drawerTitle" style="color:#fff;font-family:var(--font-display);font-size:1rem;font-weight:700;line-height:1.2;"></div><div id="drawerSub" style="color:rgba(255,255,255,0.55);font-size:0.72rem;margin-top:2px;"></div></div>
       <button onclick="closeDrawer()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
     </div>
     <div id="drawerImg" style="height:200px;background-size:cover;background-position:center;flex-shrink:0;"></div>
@@ -799,44 +767,25 @@
   </div>
 </div>
 
-<!-- ===== MODAL AUTH ===== -->
+<!-- MODAL AUTH -->
 <div id="authModal" class="auth-modal">
   <button class="auth-modal-close" onclick="closeAuthModal()">✕</button>
-  <div style="text-align:center;">
-    <div class="hero-title" style="font-size:clamp(2rem,6vw,3.5rem);margin-bottom:0.3rem;">Rojobore</div>
-  </div>
-  <div id="authContextMsg" class="auth-context-msg" style="display:none;">
-    <strong>🔐 Para realizar esta reserva, necesitas una cuenta.</strong><br>
-    <span id="authContextDetail">Es rápido, gratuito y te permite gestionar todas tus reservas.</span>
-  </div>
+  <div style="text-align:center;"><div class="hero-title" style="font-size:clamp(2rem,6vw,3.5rem);margin-bottom:0.3rem;">Rojobore</div></div>
+  <div id="authContextMsg" class="auth-context-msg" style="display:none;"><strong>🔐 Para realizar esta reserva, necesitas una cuenta.</strong><br><span id="authContextDetail">Es rápido, gratuito y te permite gestionar todas tus reservas.</span></div>
   <div class="auth-modal-tabs">
     <button class="auth-modal-tab active" onclick="switchAuthTab('register')">Crear cuenta</button>
     <button class="auth-modal-tab" onclick="switchAuthTab('login')">Ya tengo cuenta</button>
   </div>
   <div id="auth-form-register" class="auth-modal-form">
+    <div class="auth-modal-row"><div class="auth-input-group"><span class="auth-input-icon">👤</span><input class="auth-input" type="text" id="regName" placeholder="Nombre completo" required></div></div>
     <div class="auth-modal-row">
-      <div class="auth-input-group">
-        <span class="auth-input-icon">👤</span>
-        <input class="auth-input" type="text" id="regName" placeholder="Nombre completo" required>
-      </div>
-    </div>
-    <div class="auth-modal-row">
-      <div class="auth-input-group" style="flex:1.2;">
-        <span class="auth-input-icon">📧</span>
-        <input class="auth-input" type="email" id="regEmail" placeholder="Correo electrónico" required>
-      </div>
-      <div class="auth-input-group" style="flex:1;">
-        <span class="auth-input-icon">📱</span>
-        <input class="auth-input" type="tel" id="regPhone" placeholder="+591 71607412" required>
-      </div>
+      <div class="auth-input-group" style="flex:1.2;"><span class="auth-input-icon">📧</span><input class="auth-input" type="email" id="regEmail" placeholder="Correo electrónico" required></div>
+      <div class="auth-input-group" style="flex:1;"><span class="auth-input-icon">📱</span><input class="auth-input" type="tel" id="regPhone" placeholder="+591 71607412" required></div>
     </div>
     <button class="auth-btn-primary" onclick="registerUser()">Registrarme gratis</button>
   </div>
   <div id="auth-form-login" class="auth-modal-form" style="display:none;">
-    <div class="auth-input-group">
-      <span class="auth-input-icon">📧</span>
-      <input class="auth-input" type="email" id="loginEmail" placeholder="Correo electrónico registrado" required>
-    </div>
+    <div class="auth-input-group"><span class="auth-input-icon">📧</span><input class="auth-input" type="email" id="loginEmail" placeholder="Correo electrónico registrado" required></div>
     <button class="auth-btn-primary auth-btn-secondary" onclick="loginUser()">Ingresar a mi cuenta</button>
   </div>
   <div class="auth-modal-footer">Al registrarte aceptas nuestros <span>términos</span> y <span>política de privacidad</span></div>
@@ -847,7 +796,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 /* =====================================================================
-   DATOS
+   DATOS (idénticos)
    ===================================================================== */
 const lugaresTuristicos = [
   { id:1, item:"Balneario Municipal El Chorro", municipio:"Roboré", precioLocal:10, precioExtranjero:20, rating:4.5, horario:"08:00-18:00", descripcion:"Balneario municipal con piscinas naturales de agua cristalina.", imagen:"https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/lugarturistico/balneariomunicipal.jpeg", lat:-18.3328, lng:-59.7583, googleMaps:"https://maps.app.goo.gl/eeZzYqQRrB1Qtw4n8", distancia:"Centro de Roboré", transporte:"Caminando 5 min", dificultad:"Fácil", experiencia:"Relax, familiar", servicios:"Vestidores, baños, quioscos", recomendacion:"Llevar traje de baño y protector solar" },
@@ -941,18 +890,125 @@ let userMarker = null;
 let planRutaDist = 0, planRutaTarifa = 0;
 let calcRutaDist = 0, calcRutaTarifa = 0;
 let fullMap = null;
-let currentPanelSection = '';
 
 let bookingState = { step:1, serviceType:'turismo', item:null, fecha:'', personas:2, visitorType:'local', nombre:'', tel:'', email:'', nota:'' };
 
 /* =====================================================================
-   SIDEBAR EXTRA: luciérnagas doradas esmeralda + meteoritos lila + estrellas
-   (la cascada principal viene del script al final del body)
+   SIDEBAR: CASCADA ANIMADA (URL CORREGIDA)
    ===================================================================== */
+function initSidebarCascade() {
+  const sb = document.getElementById('sidebar');
+  const cv = document.getElementById('sbFx');
+  if (!sb || !cv) return;
+  const x = cv.getContext('2d');
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  // ✅ URL CORREGIDA: repo "rojobore-" en la raíz
+  img.src = 'https://raw.githubusercontent.com/santacruzrojobore-sys/rojobore-/main/barra_lateral_hd.jpg';
+  img.onerror = function() { console.warn('No se pudo cargar barra_lateral_hd.jpg — el ::before con background sigue mostrando la imagen.'); };
+  const R = Math.random, lerp = (a,b,t) => a + (b-a)*t;
+  const Y0 = .117, Y1 = .416, Y2 = .734;
+  const cxN = y => y < Y1 ? lerp(.546,.496,(y-Y0)/(Y1-Y0)) : lerp(.496,.441,(y-Y1)/(Y2-Y1));
+  const hwN = y => y < Y1 ? lerp(.017,.040,(y-Y0)/(Y1-Y0)) : lerp(.040,.060,(y-Y1)/(Y2-Y1));
+  const POOL_TOP = .745, POOL_BOT = .93;
+  const S = Array.from({length:70}, () => ({ u: R()*2-1, y: Y0 + R()*(Y2-Y0), v: .35+R()*.5, l: .02+R()*.035, a: .2+R()*.35 }));
+  const M = Array.from({length:12}, () => ({ dx:(R()-.5)*.16, dy:(R()-.5)*.04, r:.05+R()*.07, ph:R()*6, s:.2+R()*.4 }));
+  const foam = [], rip = [];
+  let mx = -999, my = -999, lr = 0, lastR = 0, last = performance.now(), G = null;
+
+  sb.addEventListener('pointermove', e => {
+    const r = sb.getBoundingClientRect();
+    mx = e.clientX - r.left; my = e.clientY - r.top;
+    if (G && my > G.py(POOL_TOP) && my < G.py(POOL_BOT) && performance.now() - lr > 110) {
+      lr = performance.now();
+      rip.push({ x: mx, y: my, r: 2, a: .7 });
+    }
+  });
+  sb.addEventListener('pointerleave', () => { mx = my = -999; });
+
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (document.hidden) return;
+    const t = now/1000, dt = Math.min(.05, (now-last)/1000);
+    last = now;
+    const W = sb.clientWidth, H = sb.clientHeight, dpr = Math.min(devicePixelRatio||1, 2);
+    if (cv.width !== (W*dpr|0) || cv.height !== (H*dpr|0)) { cv.width = W*dpr|0; cv.height = H*dpr|0; }
+    x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    x.clearRect(0, 0, W, H);
+
+    if (img.complete && img.naturalWidth) {
+      const iw = img.naturalWidth, ih = img.naturalHeight;
+      const k = Math.max(W/iw, H/ih), SX = iw*k, SY = ih*k;
+      const ox = Math.min(0, Math.max(W-SX, W/2 - .5*SX)), oy = (H-SY)/2, sc = Math.max(.6, SX/604);
+      const px = nx => ox + nx*SX, py = ny => oy + ny*SY;
+      G = { py };
+
+      x.globalCompositeOperation = 'source-over';
+      x.drawImage(img, ox, oy, SX, SY);
+      x.globalCompositeOperation = 'lighter';
+
+      for (const s of S) {
+        s.y += s.v*dt;
+        if (s.y > Y2) { s.y = Y0 + R()*.03; s.u = R()*2-1; }
+        const xx = px(cxN(s.y) + s.u*hwN(s.y)*.9), y = py(s.y);
+        const len = s.l*SY, fade = Math.min(1, (s.y-Y0)/.06);
+        const g = x.createLinearGradient(0, y-len, 0, y);
+        g.addColorStop(0, 'rgba(255,255,255,0)');
+        g.addColorStop(1, `rgba(235,250,255,${s.a*fade})`);
+        x.strokeStyle = g; x.lineWidth = 1.2*sc;
+        x.beginPath(); x.moveTo(xx, y-len); x.lineTo(xx, y); x.stroke();
+      }
+      for (let i = 0; i < 4; i++) {
+        const ny = Y0 + ((t*.16 + i*.25) % 1) * (Y2-Y0);
+        const w = hwN(ny)*SX, c = px(cxN(ny));
+        const g = x.createLinearGradient(c-w, 0, c+w, 0);
+        g.addColorStop(0, 'rgba(255,255,255,0)');
+        g.addColorStop(.5, 'rgba(255,255,255,.09)');
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        x.fillStyle = g; x.fillRect(c-w, py(ny), w*2, .05*SY);
+      }
+      const bx = px(cxN(Y2)), by = py(Y2);
+      for (const m of M) {
+        const a = .12 + .06*Math.sin(t+m.ph);
+        const mxp = bx + m.dx*SX + Math.sin(t*m.s+m.ph)*18*sc;
+        const myp = by + m.dy*SY + Math.cos(t*m.s*.8+m.ph)*8*sc;
+        const r = m.r*SX;
+        const g = x.createRadialGradient(mxp, myp, 0, mxp, myp, r);
+        g.addColorStop(0, `rgba(235,250,255,${a})`);
+        g.addColorStop(1, 'rgba(235,250,255,0)');
+        x.fillStyle = g; x.fillRect(mxp-r, myp-r, r*2, r*2);
+      }
+      for (let i = 0; i < 2; i++) foam.push({ x: bx + (R()-.5)*hwN(Y2)*SX*1.6, y: by+2, vx: (R()-.5)*1.6*sc, vy: (-R()*2.8-.6)*sc, l: 1 });
+      for (let i = foam.length-1; i >= 0; i--) {
+        const f = foam[i]; f.vy += .12*sc; f.x += f.vx; f.y += f.vy; f.l -= .03;
+        if (f.l <= 0 || f.y > by+8) { foam.splice(i,1); continue; }
+        x.fillStyle = `rgba(240,252,255,${f.l*.8})`;
+        x.beginPath(); x.arc(f.x, f.y, 1.4*sc, 0, 6.283); x.fill();
+      }
+      x.globalCompositeOperation = 'source-over';
+      if (t-lastR > .55) { lastR = t; rip.push({ x: bx + (R()-.5)*hwN(Y2)*SX, y: by + (14+R()*6)*sc, r: 3, a: .55 }); }
+      for (let i = rip.length-1; i >= 0; i--) {
+        const r = rip[i]; r.r += .7*sc; r.a -= .011;
+        if (r.a <= 0) { rip.splice(i,1); continue; }
+        x.strokeStyle = `rgba(225,250,255,${r.a})`; x.lineWidth = 1;
+        x.beginPath(); x.ellipse(r.x, r.y, r.r, r.r*.32, 0, 0, 6.283); x.stroke();
+      }
+      let g = x.createLinearGradient(0, 0, 0, H*.38);
+      g.addColorStop(0, 'rgba(4,14,14,.62)');
+      g.addColorStop(1, 'rgba(4,14,14,0)');
+      x.fillStyle = g; x.fillRect(0, 0, W, H*.38);
+      g = x.createRadialGradient(W/2, H/2, H*.38, W/2, H/2, H*.85);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, 'rgba(0,8,8,.5)');
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
 function initSidebarExtra() {
   const extra = document.getElementById('sbExtra');
   if (!extra) return;
-  // Estrellas titilantes
   for (let i = 0; i < 30; i++) {
     const star = document.createElement('div');
     star.className = 'sb-star';
@@ -963,7 +1019,6 @@ function initSidebarExtra() {
     star.style.animationDelay = (Math.random() * 5) + 's';
     extra.appendChild(star);
   }
-  // Luciérnagas doradas esmeralda
   for (let i = 0; i < 10; i++) {
     const luci = document.createElement('div');
     luci.className = 'sb-luciernaga';
@@ -975,7 +1030,6 @@ function initSidebarExtra() {
     luci.style.width = luci.style.height = s + 'px';
     extra.appendChild(luci);
   }
-  // Meteoritos lila sutiles
   for (let i = 0; i < 3; i++) {
     const meteor = document.createElement('div');
     meteor.className = 'sb-meteor';
@@ -998,7 +1052,6 @@ const FX = {
   raf: null,
   particles: [],
   mouse: { x: 0, y: 0, down: false },
-  auroraGL: null,
   auroraResize: null,
   auroraClickHandler: null
 };
@@ -1018,7 +1071,6 @@ function stopAllFX() {
     window.removeEventListener('touchstart', FX.auroraClickHandler);
     FX.auroraClickHandler = null;
   }
-  FX.auroraGL = null;
   FX.current = null;
   FX.particles = [];
 }
@@ -1049,46 +1101,38 @@ window.addEventListener('touchmove', e => { if (e.touches[0]) { FX.mouse.x = e.t
 window.addEventListener('touchstart', e => { FX.mouse.down = true; if (e.touches[0]) { FX.mouse.x = e.touches[0].clientX; FX.mouse.y = e.touches[0].clientY; } }, { passive: true });
 window.addEventListener('touchend', () => { FX.mouse.down = false; });
 
-/* ---------- HOTELES: ENJAMBRE DORADO ---------- */
+/* HOTELES: ENJAMBRE DORADO */
 function startHotelesFX() {
-  stopAllFX();
-  initFXCanvas();
-  FX.current = 'hoteles';
-  const W = window.innerWidth, H = window.innerHeight;
-  FX.particles = [];
+  stopAllFX(); initFXCanvas(); FX.current = 'hoteles';
+  const W = window.innerWidth, H = window.innerHeight; FX.particles = [];
   const COUNT = 2000;
-  for (let i = 0; i < COUNT; i++) {
-    FX.particles.push({ x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, r: Math.random() * 1.8 + 0.4, alpha: Math.random() * 0.7 + 0.3, speed: 0.5 + Math.random() * 1.5 });
-  }
+  for (let i = 0; i < COUNT; i++) FX.particles.push({ x: Math.random()*W, y: Math.random()*H, vx: 0, vy: 0, r: Math.random()*1.8+0.4, alpha: Math.random()*0.7+0.3, speed: 0.5+Math.random()*1.5 });
   let time = 0;
   function frame() {
     if (FX.current !== 'hoteles') return;
-    time += 0.016;
-    const ctx = FX.ctx;
-    ctx.clearRect(0, 0, W, H);
-    ctx.globalCompositeOperation = 'lighter';
+    time += 0.016; const ctx = FX.ctx;
+    ctx.clearRect(0, 0, W, H); ctx.globalCompositeOperation = 'lighter';
     for (let i = 0; i < FX.particles.length; i++) {
       const p = FX.particles[i];
-      const angle = Math.sin(p.x * 0.005 + time) * Math.cos(p.y * 0.005 + time * 0.7) * Math.PI * 2;
-      p.vx += Math.cos(angle) * 0.15; p.vy += Math.sin(angle) * 0.15;
+      const angle = Math.sin(p.x*0.005 + time) * Math.cos(p.y*0.005 + time*0.7) * Math.PI * 2;
+      p.vx += Math.cos(angle)*0.15; p.vy += Math.sin(angle)*0.15;
       const dx = FX.mouse.x - p.x, dy = FX.mouse.y - p.y;
       const dist = Math.hypot(dx, dy) + 0.001;
-      const swirl = 120 / (dist + 80);
-      p.vx += (-dy / dist) * swirl * 0.8; p.vy += (dx / dist) * swirl * 0.8;
-      if (FX.mouse.down && dist < 300) { p.vx += (dx / dist) * 1.2; p.vy += (dy / dist) * 1.2; }
+      const swirl = 120/(dist+80);
+      p.vx += (-dy/dist)*swirl*0.8; p.vy += (dx/dist)*swirl*0.8;
+      if (FX.mouse.down && dist < 300) { p.vx += (dx/dist)*1.2; p.vy += (dy/dist)*1.2; }
       p.vx *= 0.96; p.vy *= 0.96;
-      p.x += p.vx * p.speed * 1.5; p.y += p.vy * p.speed * 1.5;
-      if (p.x < -20) p.x = W + 20; if (p.x > W + 20) p.x = -20;
-      if (p.y < -20) p.y = H + 20; if (p.y > H + 20) p.y = -20;
-      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 6);
+      p.x += p.vx*p.speed*1.5; p.y += p.vy*p.speed*1.5;
+      if (p.x < -20) p.x = W+20; if (p.x > W+20) p.x = -20;
+      if (p.y < -20) p.y = H+20; if (p.y > H+20) p.y = -20;
+      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r*6);
       glow.addColorStop(0, `rgba(255,255,255,${p.alpha})`);
-      glow.addColorStop(0.2, `rgba(255,240,180,${p.alpha * 0.9})`);
-      glow.addColorStop(0.5, `rgba(255,200,50,${p.alpha * 0.5})`);
+      glow.addColorStop(0.2, `rgba(255,240,180,${p.alpha*0.9})`);
+      glow.addColorStop(0.5, `rgba(255,200,50,${p.alpha*0.5})`);
       glow.addColorStop(1, 'rgba(255,180,0,0)');
-      ctx.fillStyle = glow;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(p.x, p.y, p.r*6, 0, Math.PI*2); ctx.fill();
       ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r*0.8, 0, Math.PI*2); ctx.fill();
     }
     ctx.globalCompositeOperation = 'source-over';
     FX.raf = requestAnimationFrame(frame);
@@ -1096,20 +1140,16 @@ function startHotelesFX() {
   FX.raf = requestAnimationFrame(frame);
 }
 
-/* ---------- TRANSPORTE: TORMENTA ELÉCTRICA ---------- */
+/* TRANSPORTE: TORMENTA ELÉCTRICA */
 function startTransporteFX() {
-  stopAllFX();
-  initFXCanvas();
-  FX.current = 'transporte';
+  stopAllFX(); initFXCanvas(); FX.current = 'transporte';
   const W = window.innerWidth, H = window.innerHeight;
-  const TAU = Math.PI * 2;
-  const rnd = Math.random;
+  const TAU = Math.PI * 2; const rnd = Math.random;
   let flash = 0, shake = 0;
   const bolts = [], sparks = [], impacts = [];
   const floorY = () => H * 0.9;
   const pal = { outer:'255,230,140', mid:'200,230,255' };
   const sparkCol = l => l > .8 ? '255,255,255' : l > .55 ? '255,230,140' : l > .3 ? '255,160,50' : '255,70,30';
-
   function poly(x1, y1, x2, y2, offK) {
     const pts = [[x1, y1]];
     (function sub(ax, ay, bx, by, off) {
@@ -1214,7 +1254,7 @@ function startTransporteFX() {
   FX.raf = requestAnimationFrame(frame);
 }
 
-/* ---------- TURISMO: AURORA LÍQUIDA (WebGL) ---------- */
+/* TURISMO: AURORA LÍQUIDA WebGL */
 function startTurismoFX() {
   stopAllFX();
   FX.current = 'turismo';
@@ -1280,7 +1320,8 @@ function startTurismoFallback() {
     const ctx = FX.ctx; ctx.fillStyle = 'rgba(5,7,15,0.3)'; ctx.fillRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'lighter';
     const cx = W / 2, cy = H / 2;
-    for (const s of stars) { s.pz = s.z; s.z -= s.speed * 3;
+    for (const s of stars) {
+      s.pz = s.z; s.z -= s.speed * 3;
       if (s.z <= 0) { s.x = (Math.random() - 0.5) * W * 2; s.y = (Math.random() - 0.5) * H * 2; s.z = 1000; s.pz = 1000; }
       const scale = 400 / (s.z + 1), pscale = 400 / (s.pz + 1);
       const sx = cx + s.x * scale / 100, sy = cy + s.y * scale / 100;
@@ -1295,14 +1336,12 @@ function startTurismoFallback() {
   FX.raf = requestAnimationFrame(frame);
 }
 
-/* ---------- RESTAURANTES: BRASAS DEL FOGÓN ---------- */
+/* RESTAURANTES: BRASAS DEL FOGÓN */
 function startRestaurantesFX() {
   stopAllFX(); initFXCanvas(); FX.current = 'restaurantes';
   const W = window.innerWidth, H = window.innerHeight; FX.particles = [];
   const COUNT = 250;
-  for (let i = 0; i < COUNT; i++) {
-    FX.particles.push({ x: Math.random() * W, y: H + Math.random() * 200, vx: (Math.random() - 0.5) * 0.5, vy: -(0.5 + Math.random() * 1.5), r: Math.random() * 3 + 1.5, alpha: Math.random() * 0.7 + 0.3, life: Math.random() * 200 + 100, maxLife: 300 });
-  }
+  for (let i = 0; i < COUNT; i++) FX.particles.push({ x: Math.random() * W, y: H + Math.random() * 200, vx: (Math.random() - 0.5) * 0.5, vy: -(0.5 + Math.random() * 1.5), r: Math.random() * 3 + 1.5, alpha: Math.random() * 0.7 + 0.3, life: Math.random() * 200 + 100, maxLife: 300 });
   let time = 0;
   function frame() {
     if (FX.current !== 'restaurantes') return;
@@ -1368,7 +1407,7 @@ const panelCfg = {
   transporte: { title:'Transporte', colorClass:'panel-header-transporte', badgeClass:'badge-b', sectionColor:'c-transporte' }
 };
 function loadPanel(name) {
-  currentPanelSection = name; const cfg = panelCfg[name];
+  const cfg = panelCfg[name];
   const hdr = document.getElementById('panelHeaderBar');
   hdr.className = cfg.colorClass;
   hdr.style.cssText = 'padding:1rem 1.2rem;display:flex;align-items:center;gap:0.8rem;flex-shrink:0;';
@@ -1725,7 +1764,7 @@ function addCesiumMarker(viewer, lat, lng, color, label, title, description, ite
 }
 
 /* =====================================================================
-   RESERVAS / PLAN / AUTH (funciones completas)
+   RESERVAS / PLAN / AUTH
    ===================================================================== */
 function calcularDistancia(lat1, lng1, lat2, lng2) { const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lng2 - lng1) * Math.PI / 180; const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2; return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); }
 
@@ -2013,7 +2052,7 @@ function initCalcMap() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(calcMap);
     Object.entries(ciudadesBolivia).forEach(([k, c]) => { L.marker([c.lat, c.lng], { icon: L.divIcon({ html: `<div style="background:#38BDF8;color:#000;padding:2px 5px;border-radius:20px;font-size:9px;font-weight:700;">${c.nombre}</div>`, iconAnchor:[25,10] }) }).addTo(calcMap); });
     lugaresConCoord.forEach(l => { L.marker([l.lat, l.lng], { icon: L.divIcon({ html: `<div style="background:#39FF14;color:#000;padding:2px 5px;border-radius:20px;font-size:8px;font-weight:700;">${l.item.split(' ')[0]}</div>`, iconAnchor:[25,10] }) }).addTo(calcMap).bindPopup(`<b>${l.item}</b><br>${l.municipio}`); });
-  } catch(e) { console.warn('Leaflet no disponible para calcMap', e); }
+  } catch(e) { console.warn('Leaflet no disponible', e); }
 }
 function getUserLocation() { if (!navigator.geolocation) { showToast('Geolocalización no soportada'); return; } navigator.geolocation.getCurrentPosition(pos => { const lat = pos.coords.latitude, lng = pos.coords.longitude; if (!calcMap) initCalcMap(); if (userMarker) calcMap.removeLayer(userMarker); userMarker = L.marker([lat, lng], { icon: L.divIcon({ html: `<div style="background:#FF2D55;color:#fff;padding:3px 7px;border-radius:20px;font-size:9px;font-weight:800;">Yo</div>`, iconAnchor:[15,10] }) }).addTo(calcMap).bindPopup('Mi ubicación').openPopup(); calcMap.setView([lat, lng], 7); document.getElementById('calcOriginSelect').innerHTML = `<option value="custom" data-lat="${lat}" data-lng="${lng}">Mi ubicación</option>` + Object.entries(ciudadesBolivia).map(([k, c]) => `<option value="${k}">${c.nombre}</option>`).join(''); showToast('Ubicación detectada'); if (calcMap) setTimeout(() => calcMap.invalidateSize(), 200); }, () => showToast('Permiso denegado')); }
 function calcularCalcRoute() {
@@ -2036,11 +2075,11 @@ function openAuthModal(mensaje) { closeDrawer(); document.getElementById('bookin
 function closeAuthModal() { document.getElementById('authModal').classList.remove('visible'); }
 function abrirLoginModal() { openAuthModal(); document.querySelectorAll('.auth-modal-tab').forEach(t => t.classList.remove('active')); document.querySelector('.auth-modal-tab:last-child').classList.add('active'); document.getElementById('auth-form-register').style.display = 'none'; document.getElementById('auth-form-login').style.display = 'flex'; }
 window.switchAuthTab = function (tab) { document.querySelectorAll('.auth-modal-tab').forEach(t => t.classList.remove('active')); event.target.classList.add('active'); document.getElementById('auth-form-register').style.display = tab === 'register' ? 'flex' : 'none'; document.getElementById('auth-form-login').style.display = tab === 'login' ? 'flex' : 'none'; };
-window.registerUser = async function () { const name = document.getElementById('regName').value.trim(); const email = document.getElementById('regEmail').value.trim(); const phone = document.getElementById('regPhone').value.trim(); if (!name || !email || !phone) { showToast('Completa todos los campos'); return; } try { const formData = new URLSearchParams({ type:'new_user', userName:name, userEmail:email, userPhone:phone }).toString(); const response = await fetch(GOOGLE_SHEETS_URL, { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, body:formData }); const data = await response.json(); if (data.ok) { currentUser = { name, email, phone }; sessionStorage.setItem('rojobore_user', JSON.stringify(currentUser)); updateUserUI(); closeAuthModal(); showToast(data.mensaje || '¡Bienvenido/a ' + name.split(' ')[0] + '!'); } else showToast(data.mensaje || 'Error en el registro'); } catch (error) { showToast('Error de conexión. Intenta de nuevo.'); } };
+window.registerUser = async function () { const name = document.getElementById('regName').value.trim(); const email = document.getElementById('regEmail').value.trim(); const phone = document.getElementById('regPhone').value.trim(); if (!name || !email || !phone) { showToast('Completa todos los campos'); return; } try { const formData = new URLSearchParams({ type:'new_user', userName:name, userEmail:email, userPhone:phone }).toString(); const response = await fetch(GOOGLE_SHEETS_URL, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:formData }); const data = await response.json(); if (data.ok) { currentUser = { name, email, phone }; sessionStorage.setItem('rojobore_user', JSON.stringify(currentUser)); updateUserUI(); closeAuthModal(); showToast(data.mensaje || '¡Bienvenido/a ' + name.split(' ')[0] + '!'); } else showToast(data.mensaje || 'Error en el registro'); } catch (error) { showToast('Error de conexión. Intenta de nuevo.'); } };
 window.loginUser = async function () { const email = document.getElementById('loginEmail').value.trim(); if (!email) { showToast('Ingresa tu correo'); return; } try { const url = `${GOOGLE_SHEETS_URL}?action=checkUser&email=${encodeURIComponent(email)}`; const response = await fetch(url); const data = await response.json(); if (data.ok && data.user) { currentUser = data.user; sessionStorage.setItem('rojobore_user', JSON.stringify(currentUser)); updateUserUI(); closeAuthModal(); showToast(data.mensaje || '¡Hola de nuevo, ' + currentUser.name.split(' ')[0] + '!'); } else showToast(data.mensaje || 'Correo no encontrado. Regístrate primero.'); } catch (error) { showToast('Error de conexión. Intenta de nuevo.'); } };
 function logout() { currentUser = null; sessionStorage.removeItem('rojobore_user'); updateUserUI(); showToast('Sesión cerrada'); showSection('hero'); }
 function updateUserUI() { const chip = document.getElementById('userName'); const btnLogin = document.getElementById('btnLoginTop'); const btnLogout = document.getElementById('btnLogoutTop'); if (currentUser) { chip.style.display = 'inline-block'; chip.textContent = currentUser.name.split(' ')[0]; btnLogin.style.display = 'none'; btnLogout.style.display = 'inline-block'; } else { chip.style.display = 'none'; btnLogin.style.display = 'inline-block'; btnLogout.style.display = 'none'; } document.getElementById('heroLoggedContent').style.display = 'flex'; }
-async function sendToSheets(data) { try { const formData = new URLSearchParams(data).toString(); const response = await fetch(GOOGLE_SHEETS_URL, { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, body:formData }); const json = await response.json(); if (json.ok) { showToast(json.mensaje || 'Datos guardados'); return true; } else { showToast(json.mensaje || 'Error al guardar'); return false; } } catch (error) { showToast('Error de conexión'); return false; } }
+async function sendToSheets(data) { try { const formData = new URLSearchParams(data).toString(); const response = await fetch(GOOGLE_SHEETS_URL, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:formData }); const json = await response.json(); if (json.ok) { showToast(json.mensaje || 'Datos guardados'); return true; } else { showToast(json.mensaje || 'Error al guardar'); return false; } } catch (error) { showToast('Error de conexión'); return false; } }
 window.enviarPresupuesto = async function (planText, total, metodo) { if (!currentUser) { openAuthModal('Para guardar y enviar tu plan de viaje, necesitas crear una cuenta.'); return; } const ok = await sendToSheets({ type:'plan', userName:currentUser.name, userEmail:currentUser.email, userPhone:currentUser.phone, planDetails:planText, total:total, metodoEnvio:metodo }); if (!ok) return; const body = `Hola ${currentUser.name},\n\n${planText}\n\n¡Disfruta tu viaje!\nEquipo Rojobore`; if (metodo === 'email') { const subject = encodeURIComponent('Tu plan de viaje · Rojobore'); window.open(`mailto:${currentUser.email}?subject=${subject}&body=${encodeURIComponent(body)}`); showToast('Email enviado a ' + currentUser.email); } else { let num = String(currentUser.phone || '').replace(/\D/g, ''); if (num.length >= 8) window.open(`https://wa.me/${num}?text=${encodeURIComponent(body)}`); else window.open(`https://wa.me/59171607412?text=${encodeURIComponent(body)}`); showToast('WhatsApp enviado'); } };
 
 function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(t._timeout); t._timeout = setTimeout(() => t.style.display = 'none', 2500); }
@@ -2053,70 +2092,10 @@ document.getElementById('planTicketModal').addEventListener('click', function (e
 document.getElementById('authModal').addEventListener('click', function (e) { if (e.target === this) closeAuthModal(); });
 
 /* INIT */
+initSidebarCascade();
 initSidebarExtra();
 updateUserUI();
 createClouds();
 </script>
-
-<!-- ===== EFECTO BARRA LATERAL · CASCADA (foto animada) ===== -->
-<script>
-(function(){
-const IMG_URL='https://raw.githubusercontent.com/santacruzrojobore-sys/santarojobore/main/imagenes/barra_lateral_hd.jpg';
-const sb=document.getElementById('sidebar');if(!sb)return;
-const st=document.createElement('style');
-st.textContent=`#sbFx{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
-.sidebar>*:not(#sbFx){position:relative;z-index:1}
-.sidebar .sidebar-item{background:rgba(4,18,20,.42);backdrop-filter:blur(5px)}
-.sidebar .sidebar-item.active{background:rgba(57,255,20,.18)}
-.sidebar .sidebar-logo{text-shadow:0 0 14px rgba(0,0,0,.9),0 0 20px rgba(57,255,20,.6)}`;
-document.head.appendChild(st);
-const cv=document.createElement('canvas');cv.id='sbFx';sb.insertBefore(cv,sb.firstChild);
-const x=cv.getContext('2d');
-const img=new Image();img.src=IMG_URL;
-const R=Math.random,lerp=(a,b,t)=>a+(b-a)*t;
-const Y0=.117,Y1=.416,Y2=.734;
-const cxN=y=>y<Y1?lerp(.546,.496,(y-Y0)/(Y1-Y0)):lerp(.496,.441,(y-Y1)/(Y2-Y1));
-const hwN=y=>y<Y1?lerp(.017,.040,(y-Y0)/(Y1-Y0)):lerp(.040,.060,(y-Y1)/(Y2-Y1));
-const POOL_TOP=.745,POOL_BOT=.93;
-const S=Array.from({length:70},()=>({u:R()*2-1,y:Y0+R()*(Y2-Y0),v:.35+R()*.5,l:.02+R()*.035,a:.2+R()*.35}));
-const M=Array.from({length:12},()=>({dx:(R()-.5)*.16,dy:(R()-.5)*.04,r:.05+R()*.07,ph:R()*6,s:.2+R()*.4}));
-const foam=[],rip=[];let mx=-999,my=-999,lr=0,lastR=0,last=performance.now(),G=null;
-sb.addEventListener('pointermove',e=>{const r=sb.getBoundingClientRect();mx=e.clientX-r.left;my=e.clientY-r.top;
- if(G&&my>G.py(POOL_TOP)&&my<G.py(POOL_BOT)&&performance.now()-lr>110){lr=performance.now();rip.push({x:mx,y:my,r:2,a:.7})}});
-sb.addEventListener('pointerleave',()=>{mx=my=-999});
-function frame(now){requestAnimationFrame(frame);
- if(document.hidden||!img.complete||!img.naturalWidth)return;
- const t=now/1000,dt=Math.min(.05,(now-last)/1000);last=now;
- const W=sb.clientWidth,H=sb.clientHeight,dpr=Math.min(devicePixelRatio||1,2);
- if(cv.width!==(W*dpr|0)||cv.height!==(H*dpr|0)){cv.width=W*dpr;cv.height=H*dpr}
- x.setTransform(dpr,0,0,dpr,0,0);
- const iw=img.naturalWidth,ih=img.naturalHeight,k=Math.max(W/iw,H/ih),SX=iw*k,SY=ih*k;
- const ox=Math.min(0,Math.max(W-SX,W/2-.5*SX)),oy=(H-SY)/2,sc=Math.max(.6,SX/604);
- const px=nx=>ox+nx*SX,py=ny=>oy+ny*SY;G={py};
- x.globalCompositeOperation='source-over';
- x.drawImage(img,ox,oy,SX,SY);
- x.globalCompositeOperation='lighter';
- for(const s of S){s.y+=s.v*dt;if(s.y>Y2){s.y=Y0+R()*.03;s.u=R()*2-1}
-  const xx=px(cxN(s.y)+s.u*hwN(s.y)*.9),y=py(s.y),len=s.l*SY,fade=Math.min(1,(s.y-Y0)/.06);
-  const g=x.createLinearGradient(0,y-len,0,y);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(1,`rgba(235,250,255,${s.a*fade})`);
-  x.strokeStyle=g;x.lineWidth=1.2*sc;x.beginPath();x.moveTo(xx,y-len);x.lineTo(xx,y);x.stroke()}
- for(let i=0;i<4;i++){const ny=Y0+((t*.16+i*.25)%1)*(Y2-Y0),w=hwN(ny)*SX,c=px(cxN(ny)),g=x.createLinearGradient(c-w,0,c+w,0);
-  g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,.09)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(c-w,py(ny),w*2,.05*SY)}
- const bx=px(cxN(Y2)),by=py(Y2);
- for(const m of M){const a=.12+.06*Math.sin(t+m.ph),mxp=bx+m.dx*SX+Math.sin(t*m.s+m.ph)*18*sc,myp=by+m.dy*SY+Math.cos(t*m.s*.8+m.ph)*8*sc,r=m.r*SX;
-  const g=x.createRadialGradient(mxp,myp,0,mxp,myp,r);g.addColorStop(0,`rgba(235,250,255,${a})`);g.addColorStop(1,'rgba(235,250,255,0)');x.fillStyle=g;x.fillRect(mxp-r,myp-r,r*2,r*2)}
- for(let i=0;i<2;i++)foam.push({x:bx+(R()-.5)*hwN(Y2)*SX*1.6,y:by+2,vx:(R()-.5)*1.6*sc,vy:(-R()*2.8-.6)*sc,l:1});
- for(let i=foam.length-1;i>=0;i--){const f=foam[i];f.vy+=.12*sc;f.x+=f.vx;f.y+=f.vy;f.l-=.03;if(f.l<=0||f.y>by+8){foam.splice(i,1);continue}
-  x.fillStyle=`rgba(240,252,255,${f.l*.8})`;x.beginPath();x.arc(f.x,f.y,1.4*sc,0,6.283);x.fill()}
- x.globalCompositeOperation='source-over';
- if(t-lastR>.55){lastR=t;rip.push({x:bx+(R()-.5)*hwN(Y2)*SX,y:by+(14+R()*6)*sc,r:3,a:.55})}
- for(let i=rip.length-1;i>=0;i--){const r=rip[i];r.r+=.7*sc;r.a-=.011;if(r.a<=0){rip.splice(i,1);continue}
-  x.strokeStyle=`rgba(225,250,255,${r.a})`;x.lineWidth=1;x.beginPath();x.ellipse(r.x,r.y,r.r,r.r*.32,0,0,6.283);x.stroke()}
- let g=x.createLinearGradient(0,0,0,H*.38);g.addColorStop(0,'rgba(4,14,14,.62)');g.addColorStop(1,'rgba(4,14,14,0)');x.fillStyle=g;x.fillRect(0,0,W,H*.38);
- g=x.createRadialGradient(W/2,H/2,H*.38,W/2,H/2,H*.85);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,8,8,.5)');x.fillStyle=g;x.fillRect(0,0,W,H)}
-requestAnimationFrame(frame);
-})();
-</script>
-
 </body>
 </html>
